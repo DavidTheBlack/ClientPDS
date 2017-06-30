@@ -1,0 +1,42 @@
+D:\Polito\PDS\client\ClientPDS\ClientPDS\bin\Debug\ClientPDS.exe.config
+D:\Polito\PDS\client\ClientPDS\ClientPDS\bin\Debug\ClientPDS.exe
+D:\Polito\PDS\client\ClientPDS\ClientPDS\bin\Debug\ClientPDS.pdb
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\ClientPDS.csprojResolveAssemblyReference.cache
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\MainWindow.g.cs
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\App.g.cs
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\ClientPDS_MarkupCompile.cache
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\ClientPDS_MarkupCompile.lref
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\MainWindow.baml
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\ClientPDS.g.resources
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\ClientPDS.Properties.Resources.resources
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\ClientPDS.csproj.GenerateResource.Cache
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\ClientPDS.exe
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\ClientPDS.pdb
+D:\Polito\PDS\client\ClientPDS\ClientPDS\bin\Debug\MahApps.Metro.dll
+D:\Polito\PDS\client\ClientPDS\ClientPDS\bin\Debug\System.Windows.Interactivity.dll
+D:\Polito\PDS\client\ClientPDS\ClientPDS\bin\Debug\MahApps.Metro.pdb
+D:\Polito\PDS\client\ClientPDS\ClientPDS\bin\Debug\MahApps.Metro.xml
+D:\Polito\PDS\client\ClientPDS\ClientPDS\obj\Debug\App.baml
+D:\Polito\PDS\ClientPDS\ClientPDS\bin\Debug\ClientPDS.exe.config
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\ClientPDS.exe
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\ClientPDS.pdb
+D:\Polito\PDS\ClientPDS\ClientPDS\bin\Debug\ClientPDS.exe
+D:\Polito\PDS\ClientPDS\ClientPDS\bin\Debug\ClientPDS.pdb
+D:\Polito\PDS\ClientPDS\ClientPDS\bin\Debug\MahApps.Metro.dll
+D:\Polito\PDS\ClientPDS\ClientPDS\bin\Debug\System.Windows.Interactivity.dll
+D:\Polito\PDS\ClientPDS\ClientPDS\bin\Debug\MahApps.Metro.pdb
+D:\Polito\PDS\ClientPDS\ClientPDS\bin\Debug\MahApps.Metro.xml
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\ClientPDS.csprojResolveAssemblyReference.cache
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\MainWindow.g.cs
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\App.g.cs
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\ClientPDS_Content.g.cs
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\ClientPDS_MarkupCompile.cache
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\ClientPDS_MarkupCompile.lref
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\App.baml
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\MainWindow.baml
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\ClientPDS.g.resources
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\ClientPDS.Properties.Resources.resources
+D:\Polito\PDS\ClientPDS\ClientPDS\obj\Debug\ClientPDS.csproj.GenerateResource.Cache
+C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\bin\Debug\ClientPDS.exe.config
+C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\obj\Debug\ClientPDS.exe
+C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\obj\Debug\ClientPDS.pdb
