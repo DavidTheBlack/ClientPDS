@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 //@TODO mettere un mutex per rendere il tutto thread safe
 
@@ -7,7 +8,6 @@ namespace ClientPDS
 {
     class Model : INotifyPropertyChanged
     {
-
         public event PropertyChangedEventHandler PropertyChanged;
         public void RaisePropertyChanged(string prop)
         {
@@ -16,17 +16,14 @@ namespace ClientPDS
 
         private List<ProcessInfo> processesList;
 
+        /// <summary>
+        /// Pid del processo che ha focus
+        /// </summary>
         private int _focusedProcessPid = 0;
 
         /// <summary>
         /// Get the focussed pid process
         /// </summary>
-        public int FocusedProcess
-        {
-            get { return _focusedProcessPid; }
-            
-        }
-
         public int FocusedProcessPid
         {
             get
@@ -34,10 +31,6 @@ namespace ClientPDS
                 return _focusedProcessPid;
             }
 
-            set
-            {
-                _focusedProcessPid = value;
-            }
         }
 
         /// <summary>
@@ -56,11 +49,12 @@ namespace ClientPDS
             else
                 return false;
             
-            //Converting the state from string to int
-            if (System.Int32.TryParse(p.state, out tmpInt))
-                tmp.state = tmpInt;
-            else
-                return false;
+            ////Converting the state from string to int
+            //if (System.Int32.TryParse(p.state, out tmpInt))
+            //    tmp.state = tmpInt;
+            //else
+            //    return false;
+
             tmp.title = p.title;
             tmp.path = p.path;
             tmp.icon = p.icon;
@@ -68,7 +62,7 @@ namespace ClientPDS
             //Process added to the list
             processesList.Add(tmp);
 
-            RaisePropertyChanged("AddedProcess");
+            RaisePropertyChanged("Apps");
             return true;
         }
         
@@ -86,7 +80,7 @@ namespace ClientPDS
                 if (index != -1)
                 {
                     processesList.RemoveAt(index);
-                    RaisePropertyChanged("RemovedProcess");
+                    RaisePropertyChanged("Apps");
                     return true;
                 }
                 else //Se processo non trovato
@@ -105,43 +99,94 @@ namespace ClientPDS
         {
 
             //Bisogna prima rimuovere il vecchio processo in focus e poi setare il nuovo processo in focus
-            int oldFocusIndex;
-            int newFocusIndex;
+            //int oldFocusIndex;
+            //int newFocusIndex;
 
-            oldFocusIndex = processesList.FindIndex(x => (x.pid == _focusedProcessPid));
+            //oldFocusIndex = processesList.FindIndex(x => (x.pid == _focusedProcessPid));
 
             int tmpPid = 0;
 
-
             if (System.Int32.TryParse(p.pid, out tmpPid))
             {
-                newFocusIndex = processesList.FindIndex(x => (x.pid == tmpPid));
-
-                if ((newFocusIndex != -1) && (oldFocusIndex != -1))
-                {   //Effettuo aggiornamento dello stato
-                    processesList[newFocusIndex].state = 1;
-                    processesList[oldFocusIndex].state = 0;
-                    _focusedProcessPid = tmpPid;
-                    RaisePropertyChanged("ProcessFocussUpdated");
-                    return true;
-                }
-                else if (newFocusIndex != -1)
-                {
-                    processesList[newFocusIndex].state = 1;
-                    _focusedProcessPid = tmpPid;
-                    RaisePropertyChanged("ProcessFocussUpdated");
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-
+                _focusedProcessPid = tmpPid;
             }
-            return false;
+            else
+            {
+                return false;
+            }
+            RaisePropertyChanged("Apps");
+            return true;
+
+            //    newFocusIndex = processesList.FindIndex(x => (x.pid == tmpPid));
+
+            //    if ((newFocusIndex != -1) && (oldFocusIndex != -1))
+            //    {   //Effettuo aggiornamento dello stato
+            //        processesList[newFocusIndex].state = 1;
+            //        processesList[oldFocusIndex].state = 0;
+            //        _focusedProcessPid = tmpPid;
+            //        RaisePropertyChanged("ProcessFocussUpdated");
+            //        return true;
+            //    }
+            //    else if (newFocusIndex != -1)
+            //    {
+            //        processesList[newFocusIndex].state = 1;
+            //        _focusedProcessPid = tmpPid;
+            //        RaisePropertyChanged("ProcessFocussUpdated");
+            //        return true;
+            //    }
+            //    else
+            //    {
+            //        return false;
+            //    }
+
+            //}
+            //return false;
         }  
         
                          
     }
+
+
+    [DataContract]
+    public class ProcessInfoJsonStr
+    {
+        [DataMember]
+        public string pid { get; set; }
+
+        [DataMember]
+        public string state { get; set; }
+
+        [DataMember]
+        public string title { get; set; }
+
+        [DataMember]
+        public string path { get; set; }
+
+        [DataMember]
+        public string icon { get; set; }
+    }
+
+    public class ProcessInfo
+    {
+
+        public int pid { get; set; }
+
+        //Informazione ridondante, nel model abbiamo 
+        //la variabile che contiene questa informazione
+        //public int state { get; set; }
+
+        public string title { get; set; }
+
+
+        public string path { get; set; }
+
+
+        public string icon { get; set; }
+    }
+
+
+
+
+
 }
 

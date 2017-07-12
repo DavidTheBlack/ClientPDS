@@ -33,20 +33,9 @@
             </Label>
        
         </StackPanel>
+
+        <local:ProcessesView x:Name="ProcessesViewControl" Loaded = "ProcessesViewControl_Loaded"/>
         
-        <DataGrid   Name ="Apps">
-            
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="App Name"></DataGridTextColumn>
-                <DataGridTextColumn Header="Pid" ></DataGridTextColumn>
-                <DataGridTextColumn Header="Description"></DataGridTextColumn>
-                <DataGridTextColumn Header="Status"></DataGridTextColumn>
-                <DataGridTextColumn Header="Percentage"></DataGridTextColumn>
-           
-            </DataGrid.Columns>
-       
-        </DataGrid>
-  
     </DockPanel>
 
 </Controls:MetroWindow>

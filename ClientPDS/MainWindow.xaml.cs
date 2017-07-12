@@ -25,5 +25,17 @@ namespace ClientPDS
         {
             InitializeComponent();
         }
+
+        private void ProcessesViewControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            ProcessesViewModel processesViewModelObj = new ProcessesViewModel();
+            //Eseguire eventuali metodi di inizializzazione del viewmodel            
+
+            ProcessesViewControl.DataContext = processesViewModelObj;            
+        }
+
+
+
+
     }
 }
