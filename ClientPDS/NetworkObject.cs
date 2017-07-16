@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using NetworkStateObject;
+using System.Windows;
 
 namespace Network
 {
@@ -55,12 +56,17 @@ namespace Network
 
         //Stringa ricevuta
         private string _receivedMex = string.Empty;
-        private int sentSize;
-        private int sentData;
+        private int sentSize;        
 
         public string receivedMex
         {
             get { return _receivedMex; }
+        }
+
+        private byte[] _receivedBytes;
+        public byte[] receivedBytes
+        {
+            get { return _receivedBytes; }
         }
 
 
@@ -90,20 +96,11 @@ namespace Network
             {
                 connectionStateChanged(this, EventArgs.Empty);
             }
+            MessageBox.Show("Stato connessione cambiato: " + _remoteIsConnected);
+
         }
 
-        /// <summary>
-        /// Evento lanciato quando un nuovo messaggio è consegnato
-        /// </summary>
-        public delegate void MessageReceivedEventHandler(object source, EventArgs e);
-        public event MessageReceivedEventHandler messageReceived;
-        protected virtual void OnMessageReceived()
-        {
-            if (messageReceived != null)
-            {
-                messageReceived(this, EventArgs.Empty);
-            }
-        }
+        
 
         #endregion
 
@@ -123,6 +120,7 @@ namespace Network
             _remotePort = port;
         }
 
+        /*
         /// <summary>
         /// Funzione che mette in ascolto l'oggetto in attesa di connessioni TCP 
         /// </summary>
@@ -167,7 +165,7 @@ namespace Network
 
 
         }
-
+        */
         /// <summary>
         /// Funzione che inizializza una connessione tcp come client
         /// </summary>
@@ -182,14 +180,18 @@ namespace Network
                 ////Start connection to remote endpoint
                 //netobj.clientSocket.BeginConnect(remoteEP, new AsyncCallback(TcpConnectionCallback), netobj);
                 //Crea socket verso server
-                Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                _remote = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 //avvia connessione verso endpoint remoto
-                socket.BeginConnect(remoteEP, new AsyncCallback(TcpConnectionCallbackClient), socket);
+                //socket.BeginConnect(remoteEP, new AsyncCallback(TcpConnectionCallbackClient), socket);
+                _remote.Connect(remoteEP);
+                //Segnalo avvenuta connessione al server
+                OnConnectionStateChanged();
             }
             catch (Exception ex)
             {
                 this._log = "Server is not active. \n Please start server and try again. \n" + ex.ToString();
             }
+            
         }
 
 
@@ -208,14 +210,16 @@ namespace Network
                 netStateObject.socket = handler;
 
                 //Start to listen for data from the server
-                handler.BeginReceive(netStateObject.recBuffer, 0, netStateObject.bufferSize, 0,
+                /*
+                 * handler.BeginReceive(netStateObject.recBuffer, 0, netStateObject.bufferSize, 0,
                     new AsyncCallback(ReceiveCallback), netStateObject);
-
+                */
                 this._log = "Connection created";
                 //Segnalo avvenuta connessione al server
                 OnConnectionStateChanged();
+                
                 //Attendo 1,5sec prima di ritornare
-                System.Threading.Thread.Sleep(1500);
+                //System.Threading.Thread.Sleep(1000);
             }
             catch (Exception ex)
             {
@@ -224,7 +228,7 @@ namespace Network
         }
 
 
-
+        /*
         /// <summary>
         /// Finalizza la connessione, quando la connessione TCP è stabilita solleva evento OnConnectionStateChanged
         /// </summary>
@@ -245,7 +249,10 @@ namespace Network
 
             this.OnConnectionStateChanged();
         }
+        */
 
+
+        /*
         //Async received data callback method
         private void ReceiveCallback(IAsyncResult ar)
         {
@@ -283,15 +290,18 @@ namespace Network
                     while (total < size) {
                         recv = netStateObj.socket.Receive(data, total, dataleft, 0);                                                       
                         if (recv == 0) {
-                            data = Encoding.ASCII.GetBytes("exit");
+                            data = UnicodeEncoding.Unicode.GetBytes("exit");
                             break;
                         }
                         total += recv;
                         dataleft -= recv;
                     }                    
 
-                    this._receivedMex = System.Text.Encoding.Unicode.GetString(data);
+                    this._receivedMex = System.Text.UnicodeEncoding.Unicode.GetString(data);
+                    this._receivedBytes = data;
+
                     OnMessageReceived();
+
                     //Rimango in ascolto di altri messaggi
                     netStateObj.socket.BeginReceive(netStateObj.recBuffer, 0, netStateObj.bufferSize, 0, new AsyncCallback(ReceiveCallback), netStateObj);
                 }
@@ -300,6 +310,56 @@ namespace Network
             {
                 Console.WriteLine("Error: " + ex.Message); 
             }
+        }
+        */
+
+
+        /// <summary>
+        /// Sync receive method
+        /// </summary>
+        public byte[] ReceiveData()
+        {
+            byte[] data = new byte[0];
+            if (_remoteIsConnected)
+            {
+                
+                try
+                {
+                    //read data from the remote server
+                    byte[] datasize = new byte[4];
+                    int bytesRead = _remote.Receive(datasize);
+
+                    int total = 0;
+                    int recv;
+                    int size = BitConverter.ToInt32(datasize, 0);
+
+                    data = new byte[size];
+                    int dataleft = size;
+                    while (total < size)
+                    {
+                        recv = _remote.Receive(data, total, dataleft, 0);
+                        if (recv == 0)
+                        {
+                            data = UnicodeEncoding.Unicode.GetBytes("exit");
+                            break;
+                        }
+                        total += recv;
+                        dataleft -= recv;
+                    }
+
+                    //this._receivedMex = System.Text.UnicodeEncoding.Unicode.GetString(data);
+                    //this._receivedBytes = data;
+                    //OnMessageReceived();       
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error: " + ex.Message);
+                    throw ex;
+                }
+
+
+            }            
+            return data;
         }
 
         public int SendVarData(string mex)

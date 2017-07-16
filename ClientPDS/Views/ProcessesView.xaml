@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"              
              xmlns:local="clr-namespace:ClientPDS"
+             xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
              mc:Ignorable="d" 
              
              d:DesignHeight="300" d:DesignWidth="300">
@@ -35,21 +36,24 @@
                         </Trigger>
                     </Style.Triggers>
                 </Style>
+                <Style BasedOn="{StaticResource MetroDataGridColumnHeader}" TargetType="{x:Type DataGridColumnHeader}">
+                    <Setter Property="Controls:ControlsHelper.ContentCharacterCasing" Value="Normal" />
+                </Style>
+                
             </DataGrid.Resources>
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="App Name"></DataGridTextColumn>
+                <!--<DataGridTextColumn Header="App Name"></DataGridTextColumn>
                 <DataGridTextColumn Header="Pid" ></DataGridTextColumn>
                 <DataGridTextColumn Header="Description"></DataGridTextColumn>
                 <DataGridTextColumn Header="Status"></DataGridTextColumn>
-                <DataGridTextColumn Header="Percentage"></DataGridTextColumn>
+                <DataGridTextColumn Header="Percentage"></DataGridTextColumn>-->
             </DataGrid.Columns>
         </DataGrid>
 
         <StackPanel Orientation="Horizontal" Grid.Row="1">
         <Label Name="FocusedProcesLabel"  Content="Pid del processo in focus:" />
-        <TextBox Name="FocusedProcessPidTxt" IsReadOnly="True" Text="{Binding Path=FocusPid}" VerticalAlignment="Bottom"
-                   />
+        <TextBox Name="FocusedProcessPidTxt" IsReadOnly="True" Text="{Binding Path=FocusPid}" VerticalAlignment="Bottom"/>
         </StackPanel>
     </Grid>
 

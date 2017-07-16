@@ -16,7 +16,7 @@ using System.Windows.Shapes;
 namespace ClientPDS
 {
     /// <summary>
-    /// Logica di interazione per UserControl1.xaml
+    /// Logica di interazione per ProcessesView.xaml
     /// </summary>
     public partial class ProcessesView : UserControl
     {
@@ -25,6 +25,13 @@ namespace ClientPDS
             InitializeComponent();
             ProcessesViewModel pViewModel= new ProcessesViewModel();
             this.DataContext = pViewModel;
+            //Apps.ItemsSource = pViewModel.Processes;
+
+            if (!pViewModel.connectToServer("127.0.0.1"))
+            {
+                MessageBox.Show("Errore nella connessione di rete, controllare indirizzo IP del server e riprovare");
+            }
+            
             //pViewModel.OnFocusUpdate += UpdateFocus;
         }
 

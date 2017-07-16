@@ -14,7 +14,7 @@ namespace ClientPDS
             if (PropertyChanged != null) { PropertyChanged(this, new PropertyChangedEventArgs(prop)); }
         }
 
-        private List<ProcessInfo> processesList;
+        List<ProcessInfo> processesList;
 
         /// <summary>
         /// Pid del processo che ha focus
@@ -57,7 +57,7 @@ namespace ClientPDS
 
             tmp.title = p.title;
             tmp.path = p.path;
-            tmp.icon = p.icon;
+            //tmp.icon = p.icon;
             
             //Process added to the list
             processesList.Add(tmp);
