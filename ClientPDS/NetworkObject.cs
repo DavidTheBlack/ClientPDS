@@ -105,8 +105,6 @@ namespace Network
 
         #region methods
 
-
-
         /// <summary>
         /// Constructor
         /// </summary>
@@ -121,7 +119,7 @@ namespace Network
         /// <summary>
         /// Open tcp connection with the server
         /// </summary>
-        public void OpenTcpConnection()
+        public bool OpenTcpConnection()
         {
             int retry = 2;
             while (retry != 0)
@@ -142,12 +140,14 @@ namespace Network
                     retry--;
                     if (retry == 0)
                     {
-                        _log = "Server is not active. \n Please start server and try again. \n" + ex.ToString();
-                        throw ex;
+                        _log = "Connection Error:" + ex.Message;
+                        _remote.Dispose();
+                        _remote = null;
+                        return false;
                     }
                 }
             }
-            
+            return true;
         }
 
         /// <summary>
@@ -161,6 +161,7 @@ namespace Network
                 this._remote.Shutdown(SocketShutdown.Both);
                 this._remote.Disconnect(true);
                 this._remote.Close();
+                this._remote.Dispose();
                 this._remote = null;
 
                 this.OnConnectionStateChanged();
@@ -171,7 +172,7 @@ namespace Network
         /// Retrieve message from the message buffer 
         /// </summary>
         /// <param name="receivedBytes"></param>
-        /// <returns>return true if the pop </returns>
+        /// <returns>return true if the pop of the message goes well</returns>
         public bool GetMessage(out byte[] receivedBytes)
         {
             return msgQueue.pop(out receivedBytes);
@@ -181,12 +182,11 @@ namespace Network
         /// <summary>
         /// Sync receive method
         /// </summary>
-        public void ReceiveData()
+        public bool ReceiveData()
         {
             byte[] data = new byte[0];
             if (_remoteIsConnected)
-            {
-                
+            {                
                 try
                 {
                     //read data from the remote server
@@ -209,27 +209,30 @@ namespace Network
                         }
                         total += recv;
                         dataleft -= recv;
-                    }
-
-                           
+                    }                           
                 }
                 catch (Exception ex)
                 {
-                    throw ex;
+                    _log = "Receive error: " + ex.Message;
+                    return false;
                 }
 
-
+                msgQueue.push(data);
+                OnMessageReceived();
+                return true;
             }
-
-            msgQueue.push(data);
-            OnMessageReceived();
+            else
+            {
+                _log = "No Connection";
+                return false;
+            }            
         }
 
         /// <summary>
-        /// Method used to send send data
+        /// Method used to send data
         /// </summary>
         /// <param name="mex">string of the message to send</param>
-        /// <returns></returns>
+        /// <returns>bytes sent to the remote endpoint</returns>
         public int SendVarData(string mex)
         {
             int total = 0;

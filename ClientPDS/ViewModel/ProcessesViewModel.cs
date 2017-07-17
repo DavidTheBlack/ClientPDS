@@ -16,7 +16,15 @@ namespace ClientPDS
     class ProcessesViewModel: INotifyPropertyChanged
     {
         #region fields and properties
-        
+        private string _log;
+        /// <summary>
+        /// Retrieve last error log.
+        /// </summary>
+        public string Log
+        {
+            get { return _log; }
+        }
+
         //The server ip
         private string serverIP;
 
@@ -70,8 +78,7 @@ namespace ClientPDS
 
 
 
-        private NetworkObject netObj;   //Oggetto di rete che incapsula socket ed altro
-        private SyncBuffer msgBuffer;      //Buffer di sincronizzazione
+        private NetworkObject netObj;   //Oggetto di rete che incapsula socket ed altro        
         private Thread recThread;       //Thread incaricato della ricezione dei messaggi da parte del server
         private ThreadStart threadDelegate;
 
@@ -92,7 +99,7 @@ namespace ClientPDS
 
         public ProcessesViewModel()
         {
-
+            _log = string.Empty;
             _processes = new ObservableCollection<ProcessInfo>();
 
             processAdd += new processAddDelegate(addProcess);
@@ -214,6 +221,7 @@ namespace ClientPDS
             }
             catch(Exception ex)
             {
+                _log = ex.Message;
                 return false;
             }
 
@@ -224,9 +232,7 @@ namespace ClientPDS
             //return netObj.remoteIsConnected ? true : false;           
         }
 
-        
-
-
+       
         /// <summary>
         /// Method that has to be executed in separate thread
         /// </summary>
@@ -235,33 +241,32 @@ namespace ClientPDS
             //1 Connessione al server
             //2 ricezione dei messaggi
             //3 inserimento nella coda dei messaggi            
-            try
+            
+            netObj = new NetworkObject(serverIP, 4444);
+            if (netObj.OpenTcpConnection())
             {
-                netObj = new NetworkObject(serverIP, 4444);
-                netObj.OpenTcpConnection();
+                //Register to the event
+                netObj.messageReceived += handleReceivedMex;
+                netObj.connectionStateChanged += handleConnectionStateChange;
+                while (keepConnection)
+                {
+                    //If there is some truble receiving data
+                    if (!netObj.ReceiveData())
+                    {
+                        //Close the connection and throw exception
+                        if (netObj.remoteIsConnected)
+                            netObj.CloseConnection();
+                        return;
+                    }
+                }
             }
-            catch (Exception ex)
+            else
             {
-                //Come inviare un'accezione da un thread all'altro??!?!?
+                MessageBox.Show("Impossibile connettersi al server.\n " + netObj.log);
+                return;
             }
 
-            //Register to the event
-            netObj.messageReceived += handleReceivedMex;
-            netObj.connectionStateChanged += handleConnectionStateChange;
-
-            while (keepConnection)
-            {
-                try
-                {
-                    netObj.ReceiveData();
-                }
-                catch(Exception ex)
-                {
-                    //Close the connection and throw exception
-                    netObj.CloseConnection();                
-                }
-                
-            }
+            
 
             //Close the connection and return
             netObj.CloseConnection();
@@ -280,7 +285,7 @@ namespace ClientPDS
 
             //byte[] recBuf = System.Text.UnicodeEncoding.Unicode.GetBytes(netObj.receivedMex);
             byte[] recBuf;
-            if(msgBuffer.pop(out recBuf)) //Se il prelievo del messaggio è andato a buon fine lo elaboro
+            if(netObj.GetMessage(out recBuf)) //Se il prelievo del messaggio è andato a buon fine lo elaboro
             {
                 MemoryStream ms = new MemoryStream(recBuf);
                 try

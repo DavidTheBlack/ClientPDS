@@ -51,10 +51,20 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="1">
-        <Label Name="FocusedProcesLabel"  Content="Pid del processo in focus:" />
-        <TextBox Name="FocusedProcessPidTxt" IsReadOnly="True" Text="{Binding Path=FocusPid}" VerticalAlignment="Bottom"/>
-        </StackPanel>
+        <Grid Grid.Row="1">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+
+                <Label Name="FocusedProcesLabel"  Content="Pid del processo in focus:" />
+                <TextBox Name="FocusedProcessPidTxt" IsReadOnly="True" Text="{Binding Path=FocusPid}" VerticalAlignment="Bottom" Margin="2"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Label x:Name="ConnectionLbl" Content="Insert server IP: " HorizontalAlignment="Right" />
+                <TextBox x:Name="textBox" MaxLength="15" TextWrapping="Wrap" Width="100" Text="127.0.0.1" HorizontalContentAlignment="Center" VerticalAlignment="Center" Margin="2"/>
+                <Button x:Name="ConnectionBtn" Content="Connect" HorizontalAlignment="Right" />
+            </StackPanel>
+        </Grid>
+
+
     </Grid>
 
 
