@@ -25,12 +25,9 @@ namespace ClientPDS
             InitializeComponent();
             ProcessesViewModel pViewModel= new ProcessesViewModel();
             this.DataContext = pViewModel;
-            //Apps.ItemsSource = pViewModel.Processes;
-
-            if (!pViewModel.connectToServer("127.0.0.1"))
-            {
+            Apps.ItemsSource = pViewModel.Processes;
+            if(!pViewModel.StartNetworkTask("127.0.0.1"))            
                 MessageBox.Show("Errore nella connessione di rete, controllare indirizzo IP del server e riprovare");
-            }
             
             //pViewModel.OnFocusUpdate += UpdateFocus;
         }

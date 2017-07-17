@@ -15,7 +15,16 @@ namespace ClientPDS
 {
     class ProcessesViewModel: INotifyPropertyChanged
     {
-        #region properties
+        #region fields and properties
+        
+        //The server ip
+        private string serverIP;
+
+        /// <summary>
+        /// flag that signals to keep alive the tcp connection or not
+        /// </summary>
+        private bool keepConnection = false;
+
 
         public event PropertyChangedEventHandler PropertyChanged;
         public void RaisePropertyChanged(string prop)
@@ -83,9 +92,9 @@ namespace ClientPDS
 
         public ProcessesViewModel()
         {
-            msgBuffer = new SyncBuffer();
+
             _processes = new ObservableCollection<ProcessInfo>();
-            msgBuffer.messageReceived += handleReceivedMex;
+
             processAdd += new processAddDelegate(addProcess);
         }
 
@@ -193,48 +202,80 @@ namespace ClientPDS
         /// Function used to connect to server
         /// </summary>
         /// <param name="serverIP">ip address of the server</param>
-        /// <returns>true if the connection succeded</returns>
-        public bool connectToServer(string serverIP)
+        public bool StartNetworkTask(string serverIP)
         {
-            int retry = 2;
-            while (retry != 0)
+            //Save the server ip in the current object
+            this.serverIP = serverIP;
+            try
+            {
+                threadDelegate = new ThreadStart(this.NetworkTask);
+                recThread = new Thread(threadDelegate);
+                recThread.Start();
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
+
+            return true;
+            //Codice obsoleto
+            //recThread.IsBackground = true;  //Setto il thread in background
+            //return true;        
+            //return netObj.remoteIsConnected ? true : false;           
+        }
+
+        
+
+
+        /// <summary>
+        /// Method that has to be executed in separate thread
+        /// </summary>
+        public void NetworkTask()
+        {
+            //1 Connessione al server
+            //2 ricezione dei messaggi
+            //3 inserimento nella coda dei messaggi            
+            try
+            {
+                netObj = new NetworkObject(serverIP, 4444);
+                netObj.OpenTcpConnection();
+            }
+            catch (Exception ex)
+            {
+                //Come inviare un'accezione da un thread all'altro??!?!?
+            }
+
+            //Register to the event
+            netObj.messageReceived += handleReceivedMex;
+            netObj.connectionStateChanged += handleConnectionStateChange;
+
+            while (keepConnection)
             {
                 try
                 {
-                    netObj = new NetworkObject(serverIP, 4444);
-                    netObj.OpenTcpConnection();                    
-                    break;
+                    netObj.ReceiveData();
                 }
-                catch (Exception e)
+                catch(Exception ex)
                 {
-                    retry--;
-                    if (retry==0) return false;
+                    //Close the connection and throw exception
+                    netObj.CloseConnection();                
                 }
+                
             }
-            threadDelegate = new ThreadStart(this.receiveMessage);
-            recThread = new Thread(threadDelegate);
-            recThread.Start();
-            //recThread.IsBackground = true;  //Setto il thread in background
-            //return true;
-            return netObj.remoteIsConnected ? true : false;           
+
+            //Close the connection and return
+            netObj.CloseConnection();
         }
 
-        /// <summary>
-        /// Thread method to receive network message
-        /// </summary>
-        private void receiveMessage()
-        {
-            while (true)
-            {
-                msgBuffer.push(netObj.ReceiveData());
-            }
-        }
 
         /// <summary>
         /// This method handles the received mex from the server popping them from the messages queue
         /// </summary>
         private void handleReceivedMex(object source, EventArgs e)
-        {            
+        {    
+            //Deve prelevare tutti i messaggi dalla coda dei messaggi e gestirli
+            
+                    
             DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(List<ProcessInfoJsonStr>));
 
             //byte[] recBuf = System.Text.UnicodeEncoding.Unicode.GetBytes(netObj.receivedMex);

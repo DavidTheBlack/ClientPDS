@@ -8,19 +8,11 @@ namespace ClientPDS.HelperClass
     {
 
         private Queue<byte[]> queue;
-
-        /// <summary>
-        /// Evento lanciato quando un nuovo messaggio è inserito nella coda
-        /// </summary>
-        public delegate void MessageReceivedEventHandler(object source, EventArgs e);
-        public event MessageReceivedEventHandler messageReceived;
-        protected virtual void OnMessageReceived()
+        public int queueSize
         {
-            if (messageReceived != null)
-            {
-                messageReceived(this, EventArgs.Empty);
-            }
+            get { return queue.Count; }
         }
+        
 
         //Syncronization mutex
         private Mutex mut = new Mutex();
@@ -49,8 +41,6 @@ namespace ClientPDS.HelperClass
                 //Segnato a tutti che rilascio il mutex
                 mut.ReleaseMutex();
             }
-
-            OnMessageReceived();
         }
 
         /// <summary>

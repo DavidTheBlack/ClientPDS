@@ -5,23 +5,16 @@ using System.Net;
 using System.Net.Sockets;
 using NetworkStateObject;
 using System.Windows;
+using ClientPDS.HelperClass;
 
 namespace Network
 {
     public class NetworkObject
     {
-        private string _locHostName;
-        private IPAddress[] _localAddresses;
-        private IPAddress _localAddressV4;
-        public IPAddress localAddressV4
-        {
-            get { return _localAddressV4; }
-        }
 
-        //Listening connection port
-        private int _localPort;
+        #region fields and properties
 
-        //Remote Socket Serve avere anche questo handler per la trasmissione sincrona
+        //Remote Socket
         private Socket _remote;
 
         //Remote IP
@@ -39,9 +32,11 @@ namespace Network
             set { _remotePort = value; }
         }
 
-        //Socket asincrono
-        private Socket _listener;
+        
         private bool _remoteIsConnected = false;
+        /// <summary>
+        /// True if the object is connected false otherwise
+        /// </summary>
         public bool remoteIsConnected
         {
             get { return this._remoteIsConnected; }
@@ -54,21 +49,16 @@ namespace Network
             get { return _log; }
         }
 
-        //Stringa ricevuta
-        private string _receivedMex = string.Empty;
-        private int sentSize;        
-
-        public string receivedMex
+        /// <summary>
+        /// Queue that contains the received mex
+        /// </summary>
+        private SyncBuffer msgQueue;
+        public int receivedMexNumber
         {
-            get { return _receivedMex; }
+            get { return msgQueue.queueSize; }
         }
-
-        private byte[] _receivedBytes;
-        public byte[] receivedBytes
-        {
-            get { return _receivedBytes; }
-        }
-
+               
+        #endregion
 
         #region Events
 
@@ -96,228 +86,102 @@ namespace Network
             {
                 connectionStateChanged(this, EventArgs.Empty);
             }
-            MessageBox.Show("Stato connessione cambiato: " + _remoteIsConnected);
-
         }
 
-        
+        /// <summary>
+        /// Event raised when a new message has been received
+        /// </summary>
+        public delegate void MessageReceivedEventHandler(object source, EventArgs e);
+        public event MessageReceivedEventHandler messageReceived;
+        protected virtual void OnMessageReceived()
+        {
+            if (messageReceived != null)
+            {
+                messageReceived(this, EventArgs.Empty);
+            }
+        }
 
         #endregion
 
-
-
         #region methods
-        //Constructor as server
-        public NetworkObject(int port)
-        {
-            this._localPort = port;
-        }
 
-        //Constructor as client
+
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="ip">Ip address of the server</param>
+        /// <param name="port">port number of the server</param>
         public NetworkObject(string ip, int port)
         {
             _remoteIP = ip;
             _remotePort = port;
         }
-
-        /*
+        
         /// <summary>
-        /// Funzione che mette in ascolto l'oggetto in attesa di connessioni TCP 
-        /// </summary>
-        public void waitForTcpConnection()
-        {
-
-            try
-            {
-                //Resolve the host name
-                _locHostName = Dns.GetHostName();
-                //Get all IP addresses of the host 
-                _localAddresses = Dns.GetHostAddresses(_locHostName);
-                //keep the first IPv4 Address from the configuration
-                for (int i = 0; i < _localAddresses.Length; i++)
-                {
-                    if (IPAddress.Parse(_localAddresses[i].ToString()).AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        _localAddressV4 = _localAddresses[i];
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error trying to get local address {0}", ex.ToString());
-            }
-
-            // Verify we got an IP address. Tell the user if we did
-            if (_localAddressV4 == null)
-            {
-                Console.WriteLine("Unable to get local address");
-                return;
-            }
-
-            //Edit hai reso listener privato a livello di classe
-            //Create a new listener socket on localPort and localAddress
-            _listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-
-            _listener.Bind(new IPEndPoint(_localAddressV4, _localPort));
-            _listener.Listen(1); //Accetta connessioni da un solo socket per volta
-            _listener.BeginAccept(new AsyncCallback(this.TcpConnectionCallbackServer), _listener);
-
-
-        }
-        */
-        /// <summary>
-        /// Funzione che inizializza una connessione tcp come client
+        /// Open tcp connection with the server
         /// </summary>
         public void OpenTcpConnection()
         {
-            try
+            int retry = 2;
+            while (retry != 0)
             {
-                //Create the remote endpoint for the socket
-                IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(_remoteIP), _remotePort);
-                ////Create TCP/IP socket
-                //netobj.clientSocket= new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                ////Start connection to remote endpoint
-                //netobj.clientSocket.BeginConnect(remoteEP, new AsyncCallback(TcpConnectionCallback), netobj);
-                //Crea socket verso server
-                _remote = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                //avvia connessione verso endpoint remoto
-                //socket.BeginConnect(remoteEP, new AsyncCallback(TcpConnectionCallbackClient), socket);
-                _remote.Connect(remoteEP);
-                //Segnalo avvenuta connessione al server
-                OnConnectionStateChanged();
-            }
-            catch (Exception ex)
-            {
-                this._log = "Server is not active. \n Please start server and try again. \n" + ex.ToString();
+                try
+                {
+                    //Create the remote endpoint for the socket
+                    IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(_remoteIP), _remotePort);
+                    ////Create TCP/IP socket                    
+                    _remote = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    //start tcp connection
+                    _remote.Connect(remoteEP);
+                    //Notify the successfull connection
+                    OnConnectionStateChanged();
+                }
+                catch (Exception ex)
+                {
+                    retry--;
+                    if (retry == 0)
+                    {
+                        _log = "Server is not active. \n Please start server and try again. \n" + ex.ToString();
+                        throw ex;
+                    }
+                }
             }
             
         }
 
-
-        private void TcpConnectionCallbackClient(IAsyncResult ar)
-        {
-            try
-            {
-                //Retrive network information
-                Socket handler = (Socket)ar.AsyncState;
-
-                //complete the connections
-                handler.EndConnect(ar);
-                //Salva handler
-                this._remote = handler;
-                NetStateObject netStateObject = new NetStateObject();
-                netStateObject.socket = handler;
-
-                //Start to listen for data from the server
-                /*
-                 * handler.BeginReceive(netStateObject.recBuffer, 0, netStateObject.bufferSize, 0,
-                    new AsyncCallback(ReceiveCallback), netStateObject);
-                */
-                this._log = "Connection created";
-                //Segnalo avvenuta connessione al server
-                OnConnectionStateChanged();
-                
-                //Attendo 1,5sec prima di ritornare
-                //System.Threading.Thread.Sleep(1000);
-            }
-            catch (Exception ex)
-            {
-                this._log = "Error: " + ex.Message;
-            }
-        }
-
-
-        /*
         /// <summary>
-        /// Finalizza la connessione, quando la connessione TCP è stabilita solleva evento OnConnectionStateChanged
+        /// Close the tcp connection
         /// </summary>
-        /// <param name="ar"></param>
-        private void TcpConnectionCallbackServer(IAsyncResult ar)
+        public void CloseConnection()
         {
-            Socket listener = (Socket)ar.AsyncState;
-            Socket handler = listener.EndAccept(ar);
-            //Salvo il socket per poterlo usare per inviare dati in maniera sincrona
-            this._remote = handler;
-
-
-            NetStateObject netStateObject = new NetStateObject();
-            netStateObject.socket = handler;
-            //Mette in ascolto l'oggetto per comunicazioni 
-            handler.BeginReceive(netStateObject.recBuffer, 0, netStateObject.bufferSize, 0,
-                new AsyncCallback(ReceiveCallback), netStateObject);
-
-            this.OnConnectionStateChanged();
-        }
-        */
-
-
-        /*
-        //Async received data callback method
-        private void ReceiveCallback(IAsyncResult ar)
-        {
-            try
+            if (this._remoteIsConnected)
             {
-                //Retrieve the NetObject and the client socket from the asynchronous state object
-                NetStateObject netStateObj = (NetStateObject)ar.AsyncState;
-                Socket handler = netStateObj.socket;
-                //read data from the remote server
-                int bytesRead = handler.EndReceive(ar);
+                //Segnalo connessione disconnessione del client
+                this._remote.Shutdown(SocketShutdown.Both);
+                this._remote.Disconnect(true);
+                this._remote.Close();
+                this._remote = null;
 
-                if (bytesRead > 0)
-                {
-                    
-                    int total = 0;
-                    int recv;
-
-                    byte[] datasize = new byte[4];
-                    //Estrapolare i primi 4 byte perchè rappresetnano la dimensione del messaggio
-                    if (netStateObj.recBuffer.Length == 4)
-                    {
-                        datasize = netStateObj.recBuffer;
-                    }else if(netStateObj.recBuffer.Length>4)
-                    {
-                        for(int i = 0; i < 4; i++)
-                        {
-                            datasize[i] = netStateObj.recBuffer[i];
-                        }
-                    }
-
-                    int size = BitConverter.ToInt32(datasize,0);
-
-                    int dataleft = size;
-                    byte[] data = new byte[size];
-                    while (total < size) {
-                        recv = netStateObj.socket.Receive(data, total, dataleft, 0);                                                       
-                        if (recv == 0) {
-                            data = UnicodeEncoding.Unicode.GetBytes("exit");
-                            break;
-                        }
-                        total += recv;
-                        dataleft -= recv;
-                    }                    
-
-                    this._receivedMex = System.Text.UnicodeEncoding.Unicode.GetString(data);
-                    this._receivedBytes = data;
-
-                    OnMessageReceived();
-
-                    //Rimango in ascolto di altri messaggi
-                    netStateObj.socket.BeginReceive(netStateObj.recBuffer, 0, netStateObj.bufferSize, 0, new AsyncCallback(ReceiveCallback), netStateObj);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error: " + ex.Message); 
+                this.OnConnectionStateChanged();
             }
         }
-        */
 
+        /// <summary>
+        /// Retrieve message from the message buffer 
+        /// </summary>
+        /// <param name="receivedBytes"></param>
+        /// <returns>return true if the pop </returns>
+        public bool GetMessage(out byte[] receivedBytes)
+        {
+            return msgQueue.pop(out receivedBytes);
+            
+        }
 
         /// <summary>
         /// Sync receive method
         /// </summary>
-        public byte[] ReceiveData()
+        public void ReceiveData()
         {
             byte[] data = new byte[0];
             if (_remoteIsConnected)
@@ -347,32 +211,37 @@ namespace Network
                         dataleft -= recv;
                     }
 
-                    //this._receivedMex = System.Text.UnicodeEncoding.Unicode.GetString(data);
-                    //this._receivedBytes = data;
-                    //OnMessageReceived();       
+                           
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Error: " + ex.Message);
                     throw ex;
                 }
 
 
-            }            
-            return data;
+            }
+
+            msgQueue.push(data);
+            OnMessageReceived();
         }
 
+        /// <summary>
+        /// Method used to send send data
+        /// </summary>
+        /// <param name="mex">string of the message to send</param>
+        /// <returns></returns>
         public int SendVarData(string mex)
         {
             int total = 0;
             int size = mex.Length;
             int dataleft = size;
             int sent;
+            int sentSize;
 
             Byte[] dataSize = BitConverter.GetBytes(size);
             Byte[] data = System.Text.Encoding.ASCII.GetBytes(mex.ToString());
 
-
+            
             sentSize = _remote.Send(dataSize);
 
             while (total < size)
@@ -385,26 +254,7 @@ namespace Network
 
         }
 
-        /// <summary>
-        /// Close the tcp connection
-        /// </summary>
-        public void closeConnection()
-        {
-            if (this._remoteIsConnected)
-            {
-                //Segnalo connessione disconnessione del client
-                this._remote.Shutdown(SocketShutdown.Both);
-                this._remote.Disconnect(true);
-                this._remote.Close();
-                this._remote = null;
-
-                this._listener.Close();
-                this._listener = null;
-
-
-                this.OnConnectionStateChanged();
-            }
-        }
+       
 
         #endregion
     }
