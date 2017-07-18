@@ -72,15 +72,26 @@ namespace Network
         public event ConnectionStateChangedEventHandler connectionStateChanged;
         protected virtual void OnConnectionStateChanged()
         {
-            //Aggiorno lo stato della connessione tcp
-            if (this._remoteIsConnected == true)
+            //Save the connection state
+            if (_remote == null)
             {
                 this._remoteIsConnected = false;
-            }
-            else
+            }else
             {
-                this._remoteIsConnected = true;
+                this._remoteIsConnected = _remote.Connected;
             }
+            
+            
+            
+            ////Aggiorno lo stato della connessione tcp
+            //if (this._remoteIsConnected == true)
+            //{
+            //    this._remoteIsConnected = false;
+            //}
+            //else
+            //{
+            //    this._remoteIsConnected = true;
+            //}
 
             if (connectionStateChanged != null)
             {
@@ -112,6 +123,7 @@ namespace Network
         /// <param name="port">port number of the server</param>
         public NetworkObject(string ip, int port)
         {
+            msgQueue = new SyncBuffer();
             _remoteIP = ip;
             _remotePort = port;
         }
@@ -134,6 +146,7 @@ namespace Network
                     _remote.Connect(remoteEP);
                     //Notify the successfull connection
                     OnConnectionStateChanged();
+                    break;
                 }
                 catch (Exception ex)
                 {
@@ -160,10 +173,8 @@ namespace Network
                 //Segnalo connessione disconnessione del client
                 this._remote.Shutdown(SocketShutdown.Both);
                 this._remote.Disconnect(true);
-                this._remote.Close();
-                this._remote.Dispose();
+                this._remote.Close();             
                 this._remote = null;
-
                 this.OnConnectionStateChanged();
             }
         }

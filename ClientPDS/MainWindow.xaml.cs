@@ -21,6 +21,7 @@ namespace ClientPDS
     /// </summary>
     public partial class MainWindow : MetroWindow
     {
+        ProcessesViewModel processesViewModelObj;
         public MainWindow()
         {
             InitializeComponent();
@@ -28,12 +29,15 @@ namespace ClientPDS
 
         private void ProcessesViewControl_Loaded(object sender, RoutedEventArgs e)
         {
-            ProcessesViewModel processesViewModelObj = new ProcessesViewModel();
+            processesViewModelObj = new ProcessesViewModel();
             //Eseguire eventuali metodi di inizializzazione del viewmodel            
-
-            ProcessesViewControl.DataContext = processesViewModelObj;            
+            ProcessesViewControl.DataContext = processesViewModelObj;                        
         }
 
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            processesViewModelObj.closeApplication();            
+        }
 
 
 

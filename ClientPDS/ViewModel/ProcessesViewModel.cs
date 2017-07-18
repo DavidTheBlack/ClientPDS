@@ -15,6 +15,18 @@ namespace ClientPDS
 {
     class ProcessesViewModel: INotifyPropertyChanged
     {
+        #region constants
+        //State of each window can be
+        const string windowInit = "0";
+        const string windowCreated = "1";
+        const string windowClosed = "2";
+        const string windowFocused = "3";
+
+        #endregion
+
+
+
+
         #region fields and properties
         private string _log;
         /// <summary>
@@ -31,7 +43,7 @@ namespace ClientPDS
         /// <summary>
         /// flag that signals to keep alive the tcp connection or not
         /// </summary>
-        private bool keepConnection = false;
+        private bool keepConnection = true;
 
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -50,8 +62,8 @@ namespace ClientPDS
         //    }
         //}
 
-        delegate bool processAddDelegate(ProcessInfoJsonStr p);
-        processAddDelegate processAdd;
+        delegate bool editProcessesDelegate(ProcessInfoJsonStr p);
+        editProcessesDelegate editProcesses;
 
 
 
@@ -101,8 +113,6 @@ namespace ClientPDS
         {
             _log = string.Empty;
             _processes = new ObservableCollection<ProcessInfo>();
-
-            processAdd += new processAddDelegate(addProcess);
         }
 
 
@@ -144,35 +154,34 @@ namespace ClientPDS
         /// </summary>
         /// <param name="p">process info json string object</param>
         /// <returns>true if the removing succeeded</returns>
-        //public bool removeProcess(ProcessInfoJsonStr p)
-        //{
-        //    int tmpPid = 0;
+        public bool removeProcess(ProcessInfoJsonStr p)
+        {
+            int tmpPid = 0;
 
-        //    if (System.Int32.TryParse(p.pid, out tmpPid))
-        //    {
-        //        int index=-1;
-        //        foreach (ProcessInfo proc in Processes)
-        //        {
-        //            if (proc.pid == tmpPid)
-        //            {
-        //                index = Processes.IndexOf(proc);
-        //                break;
-        //            }
-        //        }
+            if (System.Int32.TryParse(p.pid, out tmpPid))
+            {
+                int index = -1;
+                foreach (ProcessInfo proc in Processes)
+                {
+                    if (proc.pid == tmpPid)
+                    {
+                        index = Processes.IndexOf(proc);
+                        break;
+                    }
+                }
 
-        //        if (index != -1)
-        //        {
-        //            Processes.RemoveAt(index);
-        //            RaisePropertyChanged("Apps");
-        //            return true;
-        //        }
-        //        else //Se processo non trovato
-        //            return false;
-
-        //    }
-        //    else //Se si verifica errore nella traduzione da stringa  pid intero
-        //        return false;
-        //}
+                if (index != -1)
+                {
+                    Processes.RemoveAt(index);
+                    RaisePropertyChanged("Apps");
+                    return true;
+                }
+                else //Se processo non trovato
+                    return false;
+            }
+            else //Se si verifica errore nella traduzione da stringa  pid intero
+                return false;
+        }
 
         /// <summary>
         /// Update the focussed process
@@ -209,12 +218,13 @@ namespace ClientPDS
         /// Function used to connect to server
         /// </summary>
         /// <param name="serverIP">ip address of the server</param>
-        public bool StartNetworkTask(string serverIP)
+        public bool StartNetworkTask(string serverIPaddress)
         {
             //Save the server ip in the current object
-            this.serverIP = serverIP;
+            this.serverIP = serverIPaddress;
             try
             {
+                netObj = new NetworkObject(serverIP, 4444);
                 threadDelegate = new ThreadStart(this.NetworkTask);
                 recThread = new Thread(threadDelegate);
                 recThread.Start();
@@ -242,8 +252,9 @@ namespace ClientPDS
             //2 ricezione dei messaggi
             //3 inserimento nella coda dei messaggi            
             
-            netObj = new NetworkObject(serverIP, 4444);
-            if (netObj.OpenTcpConnection())
+            
+            bool result = netObj.OpenTcpConnection();
+            if (result)
             {
                 //Register to the event
                 netObj.messageReceived += handleReceivedMex;
@@ -253,21 +264,21 @@ namespace ClientPDS
                     //If there is some truble receiving data
                     if (!netObj.ReceiveData())
                     {
-                        //Close the connection and throw exception
+                        //Close the connection 
                         if (netObj.remoteIsConnected)
                             netObj.CloseConnection();
+                        MessageBox.Show("Errore nella ricezione dati dal server.\n" + netObj.log);
                         return;
                     }
                 }
             }
             else
             {
-                MessageBox.Show("Impossibile connettersi al server.\n " + netObj.log);
+                MessageBox.Show("Impossibile connettersi al server.\n" + netObj.log);
                 return;
             }
 
             
-
             //Close the connection and return
             netObj.CloseConnection();
         }
@@ -278,33 +289,60 @@ namespace ClientPDS
         /// </summary>
         private void handleReceivedMex(object source, EventArgs e)
         {    
-            //Deve prelevare tutti i messaggi dalla coda dei messaggi e gestirli
+            //Deve prelevare tutti i messaggi dalla coda dell'oggetto netobj e gestirli
             
                     
             DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(List<ProcessInfoJsonStr>));
-
-            //byte[] recBuf = System.Text.UnicodeEncoding.Unicode.GetBytes(netObj.receivedMex);
             byte[] recBuf;
-            if(netObj.GetMessage(out recBuf)) //Se il prelievo del messaggio è andato a buon fine lo elaboro
+            //Process messages in the queue
+            while (netObj.receivedMexNumber != 0)
             {
-                MemoryStream ms = new MemoryStream(recBuf);
-                try
+                if(netObj.GetMessage(out recBuf))
                 {
-                    processesList = (List<ProcessInfoJsonStr>)js.ReadObject(ms);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Errore di deserializzazione: " + ex.Message);
-                }
+                    //Processo il messaggio
+                    MemoryStream ms = new MemoryStream(recBuf);
+                    try
+                    {
+                        processesList = (List<ProcessInfoJsonStr>)js.ReadObject(ms);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Errore di deserializzazione: " + ex.Message);
+                    }
+                    foreach (ProcessInfoJsonStr p in processesList)
+                    {
+                        switch (p.state)
+                        {
+                            case windowInit:
+                                editProcesses+= addProcess;
+                                Application.Current.Dispatcher.Invoke(editProcesses, p);
+                                editProcesses -= addProcess;
+                                break;
+                            case windowCreated:
+                                editProcesses += addProcess;
+                                Application.Current.Dispatcher.Invoke(editProcesses, p);
+                                editProcesses -= addProcess;
+                                break;
+                            case windowFocused:
+                                editProcesses += updateFocusedProcess;
+                                Application.Current.Dispatcher.Invoke(editProcesses, p);
+                                editProcesses -= updateFocusedProcess;
+                                break;
+                            case windowClosed:
+                                editProcesses += removeProcess;
+                                Application.Current.Dispatcher.Invoke(editProcesses, p);
+                                editProcesses -= removeProcess;
+                                break;
 
-                foreach (ProcessInfoJsonStr p in processesList)
-                {
-                    Application.Current.Dispatcher.Invoke(processAdd,p);
-                    //MessageBox.Show("Aggiunto processo in coda");
+                        }
+                        
+
+                    }
                 }
-            }else
-            {
-                throw(new Exception("Errore prelievo messaggi dalla coda"));
+                else
+                {
+                    break;
+                }
             }
             
             //Console.WriteLine("Messaggio ricevuto: "+net.receivedMex);
@@ -322,6 +360,13 @@ namespace ClientPDS
         private void handleConnectionStateChange(object source, EventArgs e)
         {
 
+        }
+
+        public void closeApplication()
+        {
+            this.keepConnection = false;
+            netObj.CloseConnection();
+            
         }
     }
 

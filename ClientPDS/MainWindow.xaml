@@ -10,8 +10,11 @@
         Width="1024" Height="540" 
         WindowStartupLocation="CenterScreen"
         Style="{DynamicResource VSWindowStyleKey}"
-        ResizeMode="CanResizeWithGrip">
+        ResizeMode="CanResizeWithGrip"
+        Closing="Window_Closing">
 
+    
+    
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
