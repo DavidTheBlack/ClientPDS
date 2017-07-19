@@ -6,7 +6,6 @@
              xmlns:local="clr-namespace:ClientPDS"
              xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
              mc:Ignorable="d" 
-             
              d:DesignHeight="300" d:DesignWidth="300">
 
     <Grid>
@@ -32,7 +31,7 @@
                     </Setter>
                     <Style.Triggers>
                         <Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
-                            <Setter Property="Background" Value="Orange" />
+                            <Setter Property="Background"   Value="{DynamicResource WindowGlowBrush}" />
                         </Trigger>
                     </Style.Triggers>
                 </Style>
@@ -55,12 +54,12 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
 
                 <Label Name="FocusedProcesLabel"  Content="Pid del processo in focus:" />
-                <TextBox Name="FocusedProcessPidTxt" IsReadOnly="True" Text="{Binding Path=FocusPid}" VerticalAlignment="Bottom" Margin="2"/>
+                <TextBox Name="FocusedProcessPidTxt" IsReadOnly="True" Text="{Binding FocusPid}" VerticalAlignment="Bottom" Margin="2"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Label x:Name="ConnectionLbl" Content="Insert server IP: " HorizontalAlignment="Right" />
-                <TextBox x:Name="textBox" MaxLength="15" TextWrapping="Wrap" Width="100" Text="127.0.0.1" HorizontalContentAlignment="Center" VerticalAlignment="Center" Margin="2"/>
-                <Button x:Name="ConnectionBtn" Content="Connect" HorizontalAlignment="Right" />
+                <Label x:Name="ServerIpLbl" Content="Insert server IP: " HorizontalAlignment="Right" />
+                <TextBox x:Name="ServerIpTxt" MaxLength="15" TextWrapping="Wrap" Width="100" Text="{Binding ServerIP}" HorizontalContentAlignment="Center" VerticalAlignment="Center" Margin="2" />
+                <Button x:Name="ConnectionBtn" Content="Connect" HorizontalAlignment="Right" Click="ConnectionBtn_Click"/>
             </StackPanel>
         </Grid>
 

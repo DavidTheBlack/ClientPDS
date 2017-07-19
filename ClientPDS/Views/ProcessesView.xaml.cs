@@ -20,25 +20,62 @@ namespace ClientPDS
     /// </summary>
     public partial class ProcessesView : UserControl
     {
+        private ProcessesViewModel _viewModel;
+        public ProcessesViewModel ViewModel
+        {
+            set { _viewModel = value; }
+            private get { return _viewModel; }
+        }
         public ProcessesView()
         {
             InitializeComponent();
-            ProcessesViewModel pViewModel= new ProcessesViewModel();
-            this.DataContext = pViewModel;
-            Apps.ItemsSource = pViewModel.Processes;
-            if(!pViewModel.StartNetworkTask("172.21.84.16"))            
-                MessageBox.Show("Non è stato possibile avviare la connessione al server.\n"+pViewModel.Log);
-            
+       
+            //Apps.ItemsSource = pViewModel.Processes;
             //pViewModel.OnFocusUpdate += UpdateFocus;
         }
 
-        private void UpdateFocus(object s, FocusedEventArgs e)
+        private void ConnectionBtn_Click(object sender, RoutedEventArgs e)
         {
-            //Modificare il contenuto della text box FocusedProcessPidTxt
-            FocusedProcessPidTxt.Text = string.Empty;
-            FocusedProcessPidTxt.Text = e.Pid.ToString();
+            if (!ViewModel.connectedToServer)
+            {
+                StartConnection();
+                ConnectionBtn.Content = "Disconnect";
+                ServerIpTxt.IsEnabled = false;
+            }
+            else
+            {
+                StopConnection();
+                ConnectionBtn.Content = "Connect";
+                ServerIpTxt.IsEnabled = true;
+
+            }
         }
 
+        private  void StartConnection()
+        {
+
+            MessageBox.Show(ViewModel.ServerIP);
+
+
+            if (!ViewModel.StartNetworkTask())
+                MessageBox.Show("Non è stato possibile avviare la connessione al server.\n" + ViewModel.Log);
+        }
+
+        private void StopConnection()
+        {
+            ViewModel.CloseConnection();
+        }
+        
+
+
+        /*
+private void UpdateFocus(object s, FocusedEventArgs e)
+{
+  //Modificare il contenuto della text box FocusedProcessPidTxt
+  FocusedProcessPidTxt.Text = string.Empty;
+  FocusedProcessPidTxt.Text = e.Pid.ToString();
+}
+*/
     }
     //Codice di gestione per l'evidenziazione della riga del processo in focus
 

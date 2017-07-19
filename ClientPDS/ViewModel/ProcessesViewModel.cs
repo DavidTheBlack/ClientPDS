@@ -10,10 +10,11 @@ using System.IO;
 using System.Windows;
 using ClientPDS.HelperClass;
 using System.Windows.Threading;
+using System.Net;
 
 namespace ClientPDS
 {
-    class ProcessesViewModel: INotifyPropertyChanged
+    public class ProcessesViewModel: INotifyPropertyChanged
     {
         #region constants
         //State of each window can be
@@ -37,8 +38,42 @@ namespace ClientPDS
             get { return _log; }
         }
 
+
         //The server ip
-        private string serverIP;
+        private string _serverIP = "127.0.0.1";
+        public string ServerIP
+        {
+            get { return _serverIP; }
+            set
+            {
+                // verify that IP consists of 4 parts
+                if (value.Split(new char[] { '.' }, StringSplitOptions.RemoveEmptyEntries).Length == 4)
+                {
+                    IPAddress ipAddr;
+                    if (IPAddress.TryParse(value, out ipAddr))
+                        _serverIP = value;
+                    else
+                        MessageBox.Show("Invalid Ip Address");
+                }
+                else
+                    // invalid IP
+                    MessageBox.Show("Invalid Ip Address");
+            }
+        }
+
+        /// <summary>
+        /// Return true if the server is connected false otherwise
+        /// </summary>
+        public bool connectedToServer
+        {
+            get
+            {
+                if (netObj != null)
+                    return netObj.remoteIsConnected;
+                else
+                    return false;
+            }
+        }
 
         /// <summary>
         /// flag that signals to keep alive the tcp connection or not
@@ -67,7 +102,7 @@ namespace ClientPDS
 
 
 
-
+        
         private int _focusPid = 125;
         public int FocusPid
         {
@@ -218,22 +253,24 @@ namespace ClientPDS
         /// Function used to connect to server
         /// </summary>
         /// <param name="serverIP">ip address of the server</param>
-        public bool StartNetworkTask(string serverIPaddress)
+        public bool StartNetworkTask()
         {
             //Save the server ip in the current object
-            this.serverIP = serverIPaddress;
             try
             {
-                netObj = new NetworkObject(serverIP, 4444);
+                netObj = new NetworkObject(_serverIP, 4444);
                 threadDelegate = new ThreadStart(this.NetworkTask);
                 recThread = new Thread(threadDelegate);
+                keepConnection = true;
                 recThread.Start();
             }
             catch(Exception ex)
             {
                 _log = ex.Message;
+                keepConnection = false;
                 return false;
             }
+            
 
             return true;
             //Codice obsoleto
@@ -259,6 +296,7 @@ namespace ClientPDS
                 //Register to the event
                 netObj.messageReceived += handleReceivedMex;
                 netObj.connectionStateChanged += handleConnectionStateChange;
+
                 while (keepConnection)
                 {
                     //If there is some truble receiving data
@@ -308,6 +346,12 @@ namespace ClientPDS
                     catch (Exception ex)
                     {
                         MessageBox.Show("Errore di deserializzazione: " + ex.Message);
+                        //Test if the received mex is a protocol message (Closing connection for example)
+                        if (System.Text.UnicodeEncoding.Unicode.GetString(recBuf) == "exit")
+                        {
+                            //exit the method
+                            break;
+                        }
                     }
                     foreach (ProcessInfoJsonStr p in processesList)
                     {
@@ -333,10 +377,7 @@ namespace ClientPDS
                                 Application.Current.Dispatcher.Invoke(editProcesses, p);
                                 editProcesses -= removeProcess;
                                 break;
-
                         }
-                        
-
                     }
                 }
                 else
@@ -364,9 +405,18 @@ namespace ClientPDS
 
         public void closeApplication()
         {
+
+            CloseConnection();
+        }
+
+        public void CloseConnection()
+        {
             this.keepConnection = false;
-            netObj.CloseConnection();
-            
+            if (netObj != null && netObj.remoteIsConnected)
+            {
+                netObj.SendVarData("exit");
+                netObj.CloseConnection();
+            }
         }
     }
 
