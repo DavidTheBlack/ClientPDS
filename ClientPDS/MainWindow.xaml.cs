@@ -34,12 +34,11 @@ namespace ClientPDS
             ProcessesViewControl.DataContext = processesViewModelObj;
             //Pass the processesViewModel to the view control
             ProcessesViewControl.ViewModel = processesViewModelObj;
-
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            processesViewModelObj.closeApplication();            
+            //processesViewModelObj.closeApplication();            
         }
 
 

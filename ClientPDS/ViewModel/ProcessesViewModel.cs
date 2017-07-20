@@ -14,8 +14,32 @@ using System.Net;
 
 namespace ClientPDS
 {
-    public class ProcessesViewModel: INotifyPropertyChanged
+    public class ProcessesViewModel
     {
+        #region event-Delegates
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void RaisePropertyChanged(string prop)
+        {
+            if (PropertyChanged != null) { PropertyChanged(this, new PropertyChangedEventArgs(prop)); }
+        }
+
+        public delegate void NetworkStateChangedHandler(object s, EventArgs e);
+        public event NetworkStateChangedHandler NetworkStateChanged;
+        protected void RaiseNetworkStateChanged()
+        {
+
+            if (NetworkStateChanged != null)
+            {
+                NetworkStateChanged(this, EventArgs.Empty);
+            }
+        }
+
+        delegate bool editProcessesDelegate(ProcessInfoJsonStr p);
+        editProcessesDelegate editProcesses;
+
+        #endregion
+
+
         #region constants
         //State of each window can be
         const string windowInit = "0";
@@ -25,7 +49,69 @@ namespace ClientPDS
 
         #endregion
 
+        #region interfaceVariables
 
+        AdditionalInfoModel addInfoModel = new AdditionalInfoModel();
+
+
+        /*
+
+        private string _buttonText = "Connect";
+        public string ButtonText
+        {
+            get
+            {
+                return _buttonText;
+            }
+
+            set
+            {
+                if (value != _buttonText)
+                {
+                    _buttonText = value;
+                    RaisePropertyChanged("ButtonText");
+                }
+            }        
+        }
+
+        private bool _serverTextEnabled = true;
+        public bool ServerTextEnabled
+        {
+            get { return _serverTextEnabled; }
+            set
+            {
+                if (value != _serverTextEnabled)
+                {
+                    _serverTextEnabled = value;
+                    RaisePropertyChanged("ServerTextEnabled");
+                }
+            }
+        }
+
+        private int _focusPid = 125;
+        public int FocusPid
+        {
+            get
+            {
+                return _focusPid;
+            }
+
+            set
+            {
+                if (value != _focusPid)
+                {
+                    _focusPid = value;
+                    RaisePropertyChanged("FocusPid");
+                }
+
+
+            }
+        }
+
+        */
+
+
+        #endregion
 
 
         #region fields and properties
@@ -81,48 +167,12 @@ namespace ClientPDS
         private bool keepConnection = true;
 
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void RaisePropertyChanged(string prop)
-        {
-            if (PropertyChanged != null) { PropertyChanged(this, new PropertyChangedEventArgs(prop)); }
-        }
-
-        //public delegate void FocusUpdated(object s, FocusedEventArgs e);
-        //public event FocusUpdated OnFocusUpdate;
-        //public void RaiseOnFocusUpdate(int pid)
-        //{
-        //    if (OnFocusUpdate != null)
-        //    {
-        //        OnFocusUpdate(this, new FocusedEventArgs(pid));
-        //    }
-        //}
-
-        delegate bool editProcessesDelegate(ProcessInfoJsonStr p);
-        editProcessesDelegate editProcesses;
+       
 
 
 
         
-        private int _focusPid = 125;
-        public int FocusPid
-        {
-            get
-            {
-                return _focusPid;
-            }
-
-            set
-            {
-                if (value != _focusPid)
-                {
-                    _focusPid = value;
-                    RaisePropertyChanged("FocusPid");
-                }
-                
-
-            }
-        }
-
+        
 
 
         private NetworkObject netObj;   //Oggetto di rete che incapsula socket ed altro        
@@ -138,9 +188,11 @@ namespace ClientPDS
             get { return _processes; }
             set {
                 _processes = value;
-                RaisePropertyChanged("Apps");
+                RaisePropertyChanged("Processes");
             }
         }
+
+        
 
         #endregion
 
@@ -148,6 +200,7 @@ namespace ClientPDS
         {
             _log = string.Empty;
             _processes = new ObservableCollection<ProcessInfo>();
+
         }
 
 
@@ -163,7 +216,7 @@ namespace ClientPDS
 
             //Converting the pid from string to int
             if (System.Int32.TryParse(p.pid, out tmpInt))
-                tmp.pid = tmpInt;
+                tmp.Pid = tmpInt;
             else
                 return false;
 
@@ -173,14 +226,14 @@ namespace ClientPDS
             //else
             //    return false;
 
-            tmp.title = p.title;
-            tmp.path = p.path;
+            tmp.Title = p.title;
+            tmp.Path = p.path;
             //tmp.icon = p.icon;
 
             //Process added to the list
             Processes.Add(tmp);
 
-            RaisePropertyChanged("Apps");
+            RaisePropertyChanged("Processes");
             return true;
         }
 
@@ -198,7 +251,7 @@ namespace ClientPDS
                 int index = -1;
                 foreach (ProcessInfo proc in Processes)
                 {
-                    if (proc.pid == tmpPid)
+                    if (proc.Pid == tmpPid)
                     {
                         index = Processes.IndexOf(proc);
                         break;
@@ -208,7 +261,7 @@ namespace ClientPDS
                 if (index != -1)
                 {
                     Processes.RemoveAt(index);
-                    RaisePropertyChanged("Apps");
+                    RaisePropertyChanged("Processes");
                     return true;
                 }
                 else //Se processo non trovato
@@ -230,19 +283,7 @@ namespace ClientPDS
             if (System.Int32.TryParse(p.pid, out tmpPid))
             {
                 //Save the focus pid in private var
-                FocusPid = tmpPid;
-
-                //int index = -1;
-                //foreach (ProcessInfo proc in Processes)
-                //{
-                //    if (proc.pid == tmpPid)
-                //    {
-                //        index = Processes.IndexOf(proc);
-                //        break;
-                //    }
-                //}
-                //return (index != -1) ? true : false;
-
+                addInfoModel.FocusedPid = tmpPid;                
                 return true;
             }
             else //Se si verifica errore nella traduzione da stringa  pid intero
@@ -326,10 +367,7 @@ namespace ClientPDS
         /// This method handles the received mex from the server popping them from the messages queue
         /// </summary>
         private void handleReceivedMex(object source, EventArgs e)
-        {    
-            //Deve prelevare tutti i messaggi dalla coda dell'oggetto netobj e gestirli
-            
-                    
+        {                                            
             DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(List<ProcessInfoJsonStr>));
             byte[] recBuf;
             //Process messages in the queue
@@ -386,12 +424,11 @@ namespace ClientPDS
                 }
             }
             
+
             //Console.WriteLine("Messaggio ricevuto: "+net.receivedMex);
             //(System.Text.UnicodeEncoding.Unicode.GetBytes(net.receivedMex));
-            //File.WriteAllText("c:\\users\\david\\desktop\\json.txt", net.receivedMex);
-            
+            //File.WriteAllText("c:\\users\\david\\desktop\\json.txt", net.receivedMex);            
             //Console.WriteLine("Dati Processo- Pid: " + processes[0].pid + " stato: " + processes[0].state);
-
         } 
 
 
@@ -400,12 +437,21 @@ namespace ClientPDS
         /// </summary>
         private void handleConnectionStateChange(object source, EventArgs e)
         {
-
+            if (netObj.remoteIsConnected)
+            {
+                addInfoModel.ButtonText = "Disconnect";
+                addInfoModel.IpTextEnabled = false;
+               
+            }else
+            {
+                addInfoModel.ButtonText = "Connect";
+                addInfoModel.IpTextEnabled = true;
+            }            
+            
         }
 
         public void closeApplication()
         {
-
             CloseConnection();
         }
 
@@ -420,29 +466,15 @@ namespace ClientPDS
         }
     }
 
-    public class FocusedEventArgs : EventArgs
+    /*
+    public class ProcessesViewModel
     {
-        /// <summary>
-        /// Pid of the process that is focused
-        /// </summary>
-        private int _pid;
-        /// <summary>
-        /// Pid of the process that is focused
-        /// </summary>
-        public int Pid
-        {
-            get
-            {
-                return _pid;
-            }
-        }
+        public ObservableCollection<ProcessInfo> Processes;
 
-        public FocusedEventArgs(int p)
-        {
-            _pid = p;
-        }
 
     }
+
+    */
 
 
 

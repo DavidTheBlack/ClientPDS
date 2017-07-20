@@ -23,60 +23,63 @@ namespace ClientPDS
         private ProcessesViewModel _viewModel;
         public ProcessesViewModel ViewModel
         {
-            set { _viewModel = value; }
+            set {
+                _viewModel = value;                
+            }
             private get { return _viewModel; }
         }
+
         public ProcessesView()
         {
             InitializeComponent();
-       
-            //Apps.ItemsSource = pViewModel.Processes;
-            //pViewModel.OnFocusUpdate += UpdateFocus;
+            this.DataContext = new ProcessesViewModel();
+            
         }
 
         private void ConnectionBtn_Click(object sender, RoutedEventArgs e)
         {
             if (!ViewModel.connectedToServer)
             {
-                StartConnection();
+                StartConnection();             
+            }
+            else
+            {
+                StopConnection();
+            }
+        }
+
+        /// <summary>
+        /// Handle the changing connection state event from the processesViewModel adapting the gui
+        /// </summary>
+        public void ConnectionStateChangeHandler(object source, EventArgs e)
+        {
+            if (ViewModel.connectedToServer)
+            {                
                 ConnectionBtn.Content = "Disconnect";
                 ServerIpTxt.IsEnabled = false;
             }
             else
             {
-                StopConnection();
                 ConnectionBtn.Content = "Connect";
                 ServerIpTxt.IsEnabled = true;
 
             }
-        }
 
-        private  void StartConnection()
+        }        
+
+        private void StartConnection()
         {
-
-            MessageBox.Show(ViewModel.ServerIP);
-
-
-            if (!ViewModel.StartNetworkTask())
-                MessageBox.Show("Non è stato possibile avviare la connessione al server.\n" + ViewModel.Log);
+            if (!ViewModel.StartNetworkTask())            
+                MessageBox.Show("Non è stato possibile stabilire la connessione con il server.\n" + ViewModel.Log);      
         }
 
         private void StopConnection()
         {
             ViewModel.CloseConnection();
         }
-        
 
-
-        /*
-private void UpdateFocus(object s, FocusedEventArgs e)
-{
-  //Modificare il contenuto della text box FocusedProcessPidTxt
-  FocusedProcessPidTxt.Text = string.Empty;
-  FocusedProcessPidTxt.Text = e.Pid.ToString();
 }
-*/
-    }
+    
     //Codice di gestione per l'evidenziazione della riga del processo in focus
 
     public static class DataGridTextSearch

@@ -6,17 +6,16 @@
              xmlns:local="clr-namespace:ClientPDS"
              xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="600" d:DesignWidth="600">
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition /> <!-- Data grid row-->
             <RowDefinition Height="25"/> <!-- Notification bar row-->
         </Grid.RowDefinitions>
-        
-        <DataGrid Name ="Apps" ItemsSource="{Binding Processes}" Grid.Row="0"
-                   local:DataGridTextSearch.SearchValue="{Binding ElementName=FocusedProcessPidTxt, Path=Text, 
-            UpdateSourceTrigger=PropertyChanged}" >
+
+        <DataGrid Name ="Apps" ItemsSource="{Binding Path=Processes}" Grid.Row="0" AutoGenerateColumns="False"
+                   local:DataGridTextSearch.SearchValue="{Binding ElementName=FocusedProcessPidTxt, Path=Text, UpdateSourceTrigger=PropertyChanged}" >
 
             <DataGrid.Resources>
                 <local:SearchValueConverter x:Key="SearchValueConverter" />
@@ -31,7 +30,7 @@
                     </Setter>
                     <Style.Triggers>
                         <Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
-                            <Setter Property="Background"   Value="{DynamicResource WindowGlowBrush}" />
+                            <Setter Property="Background" Value="{DynamicResource WindowGlowBrush}" />
                         </Trigger>
                     </Style.Triggers>
                 </Style>
@@ -41,25 +40,23 @@
                 
             </DataGrid.Resources>
 
-            <DataGrid.Columns>
-                <!--<DataGridTextColumn Header="App Name"></DataGridTextColumn>
-                <DataGridTextColumn Header="Pid" ></DataGridTextColumn>
-                <DataGridTextColumn Header="Description"></DataGridTextColumn>
-                <DataGridTextColumn Header="Status"></DataGridTextColumn>
-                <DataGridTextColumn Header="Percentage"></DataGridTextColumn>-->
+            <DataGrid.Columns >
+                <DataGridTextColumn Header="App Name" Binding="{Binding Path=Title}"></DataGridTextColumn>
+                <DataGridTextColumn Header="Pid" Binding="{Binding Path=Pid}"></DataGridTextColumn>
+                <DataGridTextColumn Header="Description" Binding="{Binding Path=Path}"></DataGridTextColumn>
+                <!--<DataGridTextColumn Header="Percentage" Binding="{Binding Path=SimpleValue}></DataGridTextColumn>-->
             </DataGrid.Columns>
         </DataGrid>
 
         <Grid Grid.Row="1">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-
                 <Label Name="FocusedProcesLabel"  Content="Pid del processo in focus:" />
-                <TextBox Name="FocusedProcessPidTxt" IsReadOnly="True" Text="{Binding FocusPid}" VerticalAlignment="Bottom" Margin="2"/>
+                <TextBox Name="FocusedProcessPidTxt" IsReadOnly="True" Text="{Binding Path=FocusPid}" VerticalAlignment="Bottom" Margin="2"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Label x:Name="ServerIpLbl" Content="Insert server IP: " HorizontalAlignment="Right" />
-                <TextBox x:Name="ServerIpTxt" MaxLength="15" TextWrapping="Wrap" Width="100" Text="{Binding ServerIP}" HorizontalContentAlignment="Center" VerticalAlignment="Center" Margin="2" />
-                <Button x:Name="ConnectionBtn" Content="Connect" HorizontalAlignment="Right" Click="ConnectionBtn_Click"/>
+                <TextBox x:Name="ServerIpTxt" MaxLength="15" TextWrapping="Wrap" Width="100" Text="{Binding Path=ServerIP}" IsEnabled="{Binding Path=IpTextEnabled}"  HorizontalContentAlignment="Center" VerticalAlignment="Center" Margin="2" />
+                <Button x:Name="ConnectionBtn" Content="{Binding Path=ButtonText}"  HorizontalAlignment="Right" Click="ConnectionBtn_Click"/>
             </StackPanel>
         </Grid>
 

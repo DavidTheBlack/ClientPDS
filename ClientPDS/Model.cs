@@ -6,147 +6,177 @@ using System.Runtime.Serialization;
 
 namespace ClientPDS
 {
-    class Model : INotifyPropertyChanged
+
+    public class ProcessInfoModel { }
+    
+    public class AdditionalInfoModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        public void RaisePropertyChanged(string prop)
+        private void RaisePropertyChanged(string property)
         {
-            if (PropertyChanged != null) { PropertyChanged(this, new PropertyChangedEventArgs(prop)); }
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(property));
+            }
         }
 
-        List<ProcessInfo> processesList;
-
-        /// <summary>
-        /// Pid del processo che ha focus
-        /// </summary>
-        private int _focusedProcessPid = 0;
-
-        /// <summary>
-        /// Get the focussed pid process
-        /// </summary>
-        public int FocusedProcessPid
+        private int _focusedPid;
+        public int FocusedPid
         {
             get
             {
-                return _focusedProcessPid;
+                return _focusedPid;
             }
 
-        }
-
-        /// <summary>
-        /// Add process to the list of processes and notify the change of the model
-        /// </summary>
-        /// <param name="p">process info json string object</param>
-        /// <returns>true if the insertion of the new process succeeded</returns>
-        public bool addProcess(ProcessInfoJsonStr p)
-        {
-            ProcessInfo tmp = new ProcessInfo();
-            int tmpInt;
-
-            //Converting the pid from string to int
-            if (System.Int32.TryParse(p.pid, out tmpInt))
-                tmp.pid = tmpInt;
-            else
-                return false;
-            
-            ////Converting the state from string to int
-            //if (System.Int32.TryParse(p.state, out tmpInt))
-            //    tmp.state = tmpInt;
-            //else
-            //    return false;
-
-            tmp.title = p.title;
-            tmp.path = p.path;
-            //tmp.icon = p.icon;
-            
-            //Process added to the list
-            processesList.Add(tmp);
-
-            RaisePropertyChanged("Apps");
-            return true;
-        }
-        
-        /// <summary>
-        /// Remove a process from the list of processes following it's closing on the server
-        /// </summary>
-        /// <param name="p">process info json string object</param>
-        /// <returns>true if the removing succeeded</returns>
-        public bool removeProcess(ProcessInfoJsonStr p)
-        {
-            int tmpPid = 0 ;
-            
-            if (System.Int32.TryParse(p.pid,out tmpPid)){
-                int index = processesList.FindIndex(x => (x.pid == tmpPid));
-                if (index != -1)
+            set
+            {
+                if (_focusedPid != value)
                 {
-                    processesList.RemoveAt(index);
-                    RaisePropertyChanged("Apps");
-                    return true;
+                    _focusedPid = value;
+                    RaisePropertyChanged("FocusedPid");
                 }
-                else //Se processo non trovato
-                    return false;
-
-            }else //Se si verifica errore nella traduzione da stringa  pid intero
-                return false;
+                
+            }
         }
 
-        /// <summary>
-        /// Update the focussed process
-        /// </summary>
-        /// <param name="p">process info json string object</param>
-        /// <returns>true if the update succeeded</returns>
-        public bool updateFocusedProcess(ProcessInfoJsonStr p)
+        private bool _ipTextEnabled;
+        public bool IpTextEnabled
+        {
+            get
+            {
+                return _ipTextEnabled;
+            }
+
+            set
+            {
+                if(_ipTextEnabled != value)
+                {
+                    _ipTextEnabled = value;
+                    RaisePropertyChanged("IpTextEnabled");
+                }
+            }
+        }
+
+        private string _serverIP;
+        public string ServerIP
+        {
+            get
+            {
+                return _serverIP;
+            }
+
+            set
+            {
+                if (_serverIP != value)
+                {
+                    _serverIP = value;
+                    RaisePropertyChanged("ServerIP");
+                }
+                
+            }
+        }
+
+        private string _buttonText="Connect";
+        public string ButtonText
+        {
+            get { return _buttonText; }
+            set
+            {
+                if (value != _buttonText)
+                {
+                    _buttonText = value;
+                    RaisePropertyChanged("ButtonText");
+                }
+            }
+        }
+
+       
+    }
+            
+    public class ProcessInfo : INotifyPropertyChanged
         {
 
-            //Bisogna prima rimuovere il vecchio processo in focus e poi setare il nuovo processo in focus
-            //int oldFocusIndex;
-            //int newFocusIndex;
-
-            //oldFocusIndex = processesList.FindIndex(x => (x.pid == _focusedProcessPid));
-
-            int tmpPid = 0;
-
-            if (System.Int32.TryParse(p.pid, out tmpPid))
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void RaisePropertyChanged(string property)
+        {
+            if (PropertyChanged != null)
             {
-                _focusedProcessPid = tmpPid;
+                PropertyChanged(this, new PropertyChangedEventArgs(property));
             }
-            else
+        }
+
+
+        private int _pid;
+        public int Pid
+        {
+            get { return _pid; }
+            set
             {
-                return false;
+                if (value != _pid)
+                {
+                    _pid = value;
+                    RaisePropertyChanged("Pid");
+                }
             }
-            RaisePropertyChanged("Apps");
-            return true;
+        }
 
-            //    newFocusIndex = processesList.FindIndex(x => (x.pid == tmpPid));
+        private string _title;
+        public string Title
+        {
+            get
+            {
+                return _title;
+            }
+            set
+            {
+                if (value != _title)
+                {
+                    _title = value;
+                    RaisePropertyChanged("Title");
+                }                
+            }
+        }
 
-            //    if ((newFocusIndex != -1) && (oldFocusIndex != -1))
-            //    {   //Effettuo aggiornamento dello stato
-            //        processesList[newFocusIndex].state = 1;
-            //        processesList[oldFocusIndex].state = 0;
-            //        _focusedProcessPid = tmpPid;
-            //        RaisePropertyChanged("ProcessFocussUpdated");
-            //        return true;
-            //    }
-            //    else if (newFocusIndex != -1)
-            //    {
-            //        processesList[newFocusIndex].state = 1;
-            //        _focusedProcessPid = tmpPid;
-            //        RaisePropertyChanged("ProcessFocussUpdated");
-            //        return true;
-            //    }
-            //    else
-            //    {
-            //        return false;
-            //    }
+        private string _path;
+        public string Path
+        {
+            get
+            {
+                return _path;
+            }
 
-            //}
-            //return false;
-        }  
-        
-                         
+            set
+            {
+                if (value != _path)
+                {
+                    _path = value;
+                    RaisePropertyChanged("Path");
+                }
+            }
+        }
+
+        private string _icon;
+        public string Icon
+        {
+            get
+            {
+                return _icon;
+            }
+
+            set
+            {
+                if (value != _icon)
+                {
+                    _icon = value;
+                    RaisePropertyChanged("Icon");
+                }
+            }
+        }
     }
 
-
+    /// <summary>
+    /// Data contract class for deserialization
+    /// </summary>
     [DataContract]
     public class ProcessInfoJsonStr
     {
@@ -166,27 +196,19 @@ namespace ClientPDS
         public string icon { get; set; }
     }
 
-    public class ProcessInfo
-    {
-
-        public int pid { get; set; }
-
-        //Informazione ridondante, nel model abbiamo 
-        //la variabile che contiene questa informazione
-        //public int state { get; set; }
-
-        public string title { get; set; }
-
-
-        public string path { get; set; }
-
-
-        public string icon { get; set; }
-    }
-
-
-
-
-
 }
+
+
+
+
+
+
+   
+
+   
+
+
+
+
+
 
