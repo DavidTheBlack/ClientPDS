@@ -29,11 +29,11 @@ namespace ClientPDS
 
         private void ProcessesViewControl_Loaded(object sender, RoutedEventArgs e)
         {
-            processesViewModelObj = new ProcessesViewModel();
+            //processesViewModelObj = new ProcessesViewModel();
             //Eseguire eventuali metodi di inizializzazione del viewmodel            
-            ProcessesViewControl.DataContext = processesViewModelObj;
+            //ProcessesViewControl.DataContext = processesViewModelObj;
             //Pass the processesViewModel to the view control
-            ProcessesViewControl.ViewModel = processesViewModelObj;
+            //ProcessesViewControl.ViewModel = processesViewModelObj;
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

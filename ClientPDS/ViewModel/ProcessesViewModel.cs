@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Text;
 using System.Threading;
 using Network;
 using System.Runtime.Serialization.Json;
@@ -11,12 +9,22 @@ using System.Windows;
 using ClientPDS.HelperClass;
 using System.Windows.Threading;
 using System.Net;
+using System.ComponentModel;
 
 namespace ClientPDS
 {
-    public class ProcessesViewModel
+    public class ProcessesViewModel : INotifyPropertyChanged
+    /*
+     * InotifyPropertyChanged mi obbliga ad implementare gli eventi PropertyChangedEventHandler.
+     * Questo evento è usato per notificare i cambiamenti delle variabili ai componenti grafici collegati a tali variabili.
+     * Se un elemento grafico ha il binding con una variabile e questa vinee modificata via codice, 
+     * se non viene sollevato l'evento PropertyChangedEventHandler l'elemento grafico non mostrerà la variazione. 
+     * Viceversa se l'elemento grafico viene modificato (es textbox) dall'utente la modifica si
+     * propagherà anche alla variabile. 
+     */
     {
         #region event-Delegates
+
         public event PropertyChangedEventHandler PropertyChanged;
         public void RaisePropertyChanged(string prop)
         {
@@ -27,18 +35,21 @@ namespace ClientPDS
         public event NetworkStateChangedHandler NetworkStateChanged;
         protected void RaiseNetworkStateChanged()
         {
-
             if (NetworkStateChanged != null)
             {
                 NetworkStateChanged(this, EventArgs.Empty);
             }
         }
 
+        //Delegato per avviare avviare il metodo via dispatcher
         delegate bool editProcessesDelegate(ProcessInfoJsonStr p);
         editProcessesDelegate editProcesses;
 
-        #endregion
+        //Delegate used to update GUI connection element 
+        delegate void updateConnectionInterfaceDelegate(bool connectionState);
+        updateConnectionInterfaceDelegate updateConnectionInterface;
 
+        #endregion
 
         #region constants
         //State of each window can be
@@ -51,19 +62,66 @@ namespace ClientPDS
 
         #region interfaceVariables
 
-        AdditionalInfoModel addInfoModel = new AdditionalInfoModel();
-
-
-        /*
-
-        private string _buttonText = "Connect";
-        public string ButtonText
+        private int _focusedPid;
+        public int FocusedPid
         {
             get
             {
-                return _buttonText;
+                return _focusedPid;
             }
 
+            set
+            {
+                if (_focusedPid != value)
+                {
+                    _focusedPid = value;
+                    RaisePropertyChanged("FocusedPid");
+                }
+
+            }
+        }
+
+        private bool _ipTextEnabled;
+        public bool IpTextEnabled
+        {
+            get
+            {
+                return _ipTextEnabled;
+            }
+
+            set
+            {
+                if (_ipTextEnabled != value)
+                {
+                    _ipTextEnabled = value;
+                    RaisePropertyChanged("IpTextEnabled");
+                }
+            }
+        }
+
+        private string _serverIP;
+        public string ServerIP
+        {
+            get
+            {
+                return _serverIP;
+            }
+
+            set
+            {
+                if (_serverIP != value)
+                {
+                    _serverIP = value;
+                    RaisePropertyChanged("ServerIP");
+                }
+
+            }
+        }
+
+        private string _buttonText;
+        public string ButtonText
+        {
+            get { return _buttonText; }
             set
             {
                 if (value != _buttonText)
@@ -71,48 +129,10 @@ namespace ClientPDS
                     _buttonText = value;
                     RaisePropertyChanged("ButtonText");
                 }
-            }        
-        }
-
-        private bool _serverTextEnabled = true;
-        public bool ServerTextEnabled
-        {
-            get { return _serverTextEnabled; }
-            set
-            {
-                if (value != _serverTextEnabled)
-                {
-                    _serverTextEnabled = value;
-                    RaisePropertyChanged("ServerTextEnabled");
-                }
             }
         }
-
-        private int _focusPid = 125;
-        public int FocusPid
-        {
-            get
-            {
-                return _focusPid;
-            }
-
-            set
-            {
-                if (value != _focusPid)
-                {
-                    _focusPid = value;
-                    RaisePropertyChanged("FocusPid");
-                }
-
-
-            }
-        }
-
-        */
-
 
         #endregion
-
 
         #region fields and properties
         private string _log;
@@ -124,28 +144,6 @@ namespace ClientPDS
             get { return _log; }
         }
 
-
-        //The server ip
-        private string _serverIP = "127.0.0.1";
-        public string ServerIP
-        {
-            get { return _serverIP; }
-            set
-            {
-                // verify that IP consists of 4 parts
-                if (value.Split(new char[] { '.' }, StringSplitOptions.RemoveEmptyEntries).Length == 4)
-                {
-                    IPAddress ipAddr;
-                    if (IPAddress.TryParse(value, out ipAddr))
-                        _serverIP = value;
-                    else
-                        MessageBox.Show("Invalid Ip Address");
-                }
-                else
-                    // invalid IP
-                    MessageBox.Show("Invalid Ip Address");
-            }
-        }
 
         /// <summary>
         /// Return true if the server is connected false otherwise
@@ -167,20 +165,9 @@ namespace ClientPDS
         private bool keepConnection = true;
 
 
-       
-
-
-
-        
-        
-
-
         private NetworkObject netObj;   //Oggetto di rete che incapsula socket ed altro        
         private Thread recThread;       //Thread incaricato della ricezione dei messaggi da parte del server
         private ThreadStart threadDelegate;
-
-
-        private List<ProcessInfoJsonStr> processesList;
 
         private ObservableCollection<ProcessInfo> _processes;
         public ObservableCollection<ProcessInfo> Processes
@@ -192,15 +179,16 @@ namespace ClientPDS
             }
         }
 
-        
-
         #endregion
 
         public ProcessesViewModel()
         {
             _log = string.Empty;
             _processes = new ObservableCollection<ProcessInfo>();
-
+            FocusedPid = 0;
+            ServerIP = "127.0.0.1";
+            ButtonText = "Connect";
+            IpTextEnabled = true;
         }
 
 
@@ -283,7 +271,7 @@ namespace ClientPDS
             if (System.Int32.TryParse(p.pid, out tmpPid))
             {
                 //Save the focus pid in private var
-                addInfoModel.FocusedPid = tmpPid;                
+                FocusedPid = tmpPid;                
                 return true;
             }
             else //Se si verifica errore nella traduzione da stringa  pid intero
@@ -299,7 +287,7 @@ namespace ClientPDS
             //Save the server ip in the current object
             try
             {
-                netObj = new NetworkObject(_serverIP, 4444);
+                netObj = new NetworkObject(ServerIP, 4444);
                 threadDelegate = new ThreadStart(this.NetworkTask);
                 recThread = new Thread(threadDelegate);
                 keepConnection = true;
@@ -329,15 +317,13 @@ namespace ClientPDS
             //1 Connessione al server
             //2 ricezione dei messaggi
             //3 inserimento nella coda dei messaggi            
-            
-            
+            //Register to the event
+            netObj.messageReceived += handleReceivedMex;
+            netObj.connectionStateChanged += handleConnectionStateChange;
+
             bool result = netObj.OpenTcpConnection();
             if (result)
-            {
-                //Register to the event
-                netObj.messageReceived += handleReceivedMex;
-                netObj.connectionStateChanged += handleConnectionStateChange;
-
+            {               
                 while (keepConnection)
                 {
                     //If there is some truble receiving data
@@ -356,7 +342,6 @@ namespace ClientPDS
                 MessageBox.Show("Impossibile connettersi al server.\n" + netObj.log);
                 return;
             }
-
             
             //Close the connection and return
             netObj.CloseConnection();
@@ -367,7 +352,9 @@ namespace ClientPDS
         /// This method handles the received mex from the server popping them from the messages queue
         /// </summary>
         private void handleReceivedMex(object source, EventArgs e)
-        {                                            
+        {
+            List<ProcessInfoJsonStr> processesList = new List<ProcessInfoJsonStr>();
+
             DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(List<ProcessInfoJsonStr>));
             byte[] recBuf;
             //Process messages in the queue
@@ -391,6 +378,7 @@ namespace ClientPDS
                             break;
                         }
                     }
+
                     foreach (ProcessInfoJsonStr p in processesList)
                     {
                         switch (p.state)
@@ -431,24 +419,34 @@ namespace ClientPDS
             //Console.WriteLine("Dati Processo- Pid: " + processes[0].pid + " stato: " + processes[0].state);
         } 
 
-
         /// <summary>
         /// This method handles the connection state
         /// </summary>
         private void handleConnectionStateChange(object source, EventArgs e)
         {
-            if (netObj.remoteIsConnected)
-            {
-                addInfoModel.ButtonText = "Disconnect";
-                addInfoModel.IpTextEnabled = false;
-               
-            }else
-            {
-                addInfoModel.ButtonText = "Connect";
-                addInfoModel.IpTextEnabled = true;
-            }            
-            
+            updateConnectionInterface += updateConnectionGuiElement;
+            Application.Current.Dispatcher.Invoke(updateConnectionInterface, netObj.remoteIsConnected);
+            updateConnectionInterface -= updateConnectionGuiElement;
         }
+
+
+        private void updateConnectionGuiElement(bool connectionState)
+        {
+            if (connectionState)
+            {
+                ButtonText = "Disconnect";
+                IpTextEnabled = false;
+
+            }
+            else //Server is disconnected
+            {
+                ButtonText = "Connect";
+                IpTextEnabled = true;
+                //Clear the processes list
+                Processes.Clear();
+            }
+        }
+
 
         public void closeApplication()
         {
@@ -463,6 +461,8 @@ namespace ClientPDS
                 netObj.SendVarData("exit");
                 netObj.CloseConnection();
             }
+            //Clear the processes list
+            Processes.Clear();
         }
     }
 

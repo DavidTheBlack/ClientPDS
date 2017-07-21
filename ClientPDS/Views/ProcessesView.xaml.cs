@@ -21,24 +21,24 @@ namespace ClientPDS
     public partial class ProcessesView : UserControl
     {
         private ProcessesViewModel _viewModel;
-        public ProcessesViewModel ViewModel
-        {
-            set {
-                _viewModel = value;                
-            }
-            private get { return _viewModel; }
-        }
+        //public ProcessesViewModel ViewModel
+        //{
+        //    set {
+        //        _viewModel = value;                
+        //    }
+        //    private get { return _viewModel; }
+        //}
 
         public ProcessesView()
         {
             InitializeComponent();
-            this.DataContext = new ProcessesViewModel();
-            
+            _viewModel = new ProcessesViewModel();
+            this.DataContext = _viewModel;
         }
 
         private void ConnectionBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (!ViewModel.connectedToServer)
+            if (!_viewModel.connectedToServer)
             {
                 StartConnection();             
             }
@@ -53,7 +53,7 @@ namespace ClientPDS
         /// </summary>
         public void ConnectionStateChangeHandler(object source, EventArgs e)
         {
-            if (ViewModel.connectedToServer)
+            if (_viewModel.connectedToServer)
             {                
                 ConnectionBtn.Content = "Disconnect";
                 ServerIpTxt.IsEnabled = false;
@@ -69,13 +69,13 @@ namespace ClientPDS
 
         private void StartConnection()
         {
-            if (!ViewModel.StartNetworkTask())            
-                MessageBox.Show("Non è stato possibile stabilire la connessione con il server.\n" + ViewModel.Log);      
+            if (!_viewModel.StartNetworkTask())            
+                MessageBox.Show("Non è stato possibile stabilire la connessione con il server.\n" + _viewModel.Log);      
         }
 
         private void StopConnection()
         {
-            ViewModel.CloseConnection();
+            _viewModel.CloseConnection();
         }
 
 }
