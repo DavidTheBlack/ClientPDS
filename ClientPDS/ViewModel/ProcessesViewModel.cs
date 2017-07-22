@@ -57,6 +57,7 @@ namespace ClientPDS
         const string windowCreated = "1";
         const string windowClosed = "2";
         const string windowFocused = "3";
+        const string noIconWindow = "NoIcon";
 
         #endregion
 
@@ -132,6 +133,8 @@ namespace ClientPDS
             }
         }
 
+
+
         #endregion
 
         #region fields and properties
@@ -164,6 +167,12 @@ namespace ClientPDS
         /// </summary>
         private bool keepConnection = true;
 
+        //Default Icon Bytes
+        private byte[] defaultIcon;
+
+
+
+
 
         private NetworkObject netObj;   //Oggetto di rete che incapsula socket ed altro        
         private Thread recThread;       //Thread incaricato della ricezione dei messaggi da parte del server
@@ -189,8 +198,11 @@ namespace ClientPDS
             ServerIP = "127.0.0.1";
             ButtonText = "Connect";
             IpTextEnabled = true;
-        }
 
+            defaultIcon= System.IO.File.ReadAllBytes(@"C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\Resources\icon_def.ico");
+
+
+        }
 
         /// <summary>
         /// Add process to the list of processes and notify the change of the model
@@ -216,7 +228,21 @@ namespace ClientPDS
 
             tmp.Title = p.title;
             tmp.Path = p.path;
-            //tmp.icon = p.icon;
+
+
+            //Check if the proces has the icon or not
+            if(string.Compare(p.icon, noIconWindow) == 0) 
+            {
+                //the proces doesn't have the icon so display default icon
+                tmp.Icon = defaultIcon;
+
+            }else
+            {
+                //The proces has the icon
+                tmp.Icon = Convert.FromBase64String(p.icon);
+                
+            }
+            
 
             //Process added to the list
             Processes.Add(tmp);
@@ -307,7 +333,6 @@ namespace ClientPDS
             //return true;        
             //return netObj.remoteIsConnected ? true : false;           
         }
-
        
         /// <summary>
         /// Method that has to be executed in separate thread
@@ -346,7 +371,6 @@ namespace ClientPDS
             //Close the connection and return
             netObj.CloseConnection();
         }
-
 
         /// <summary>
         /// This method handles the received mex from the server popping them from the messages queue
@@ -429,7 +453,6 @@ namespace ClientPDS
             updateConnectionInterface -= updateConnectionGuiElement;
         }
 
-
         private void updateConnectionGuiElement(bool connectionState)
         {
             if (connectionState)
@@ -447,7 +470,6 @@ namespace ClientPDS
             }
         }
 
-
         public void closeApplication()
         {
             CloseConnection();
@@ -464,21 +486,6 @@ namespace ClientPDS
             //Clear the processes list
             Processes.Clear();
         }
-    }
-
-    /*
-    public class ProcessesViewModel
-    {
-        public ObservableCollection<ProcessInfo> Processes;
-
 
     }
-
-    */
-
-
-
-
-
-
 }

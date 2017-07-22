@@ -72,8 +72,8 @@ namespace ClientPDS
             }
         }
 
-        private string _icon;
-        public string Icon
+        private byte[] _icon;
+        public byte[] Icon
         {
             get
             {
