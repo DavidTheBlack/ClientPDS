@@ -34,6 +34,7 @@ namespace ClientPDS
             InitializeComponent();
             _viewModel = new ProcessesViewModel();
             this.DataContext = _viewModel;
+            
         }
 
         private void ConnectionBtn_Click(object sender, RoutedEventArgs e)
@@ -81,7 +82,7 @@ namespace ClientPDS
 }
     
     //Codice di gestione per l'evidenziazione della riga del processo in focus
-
+    /*
     public static class DataGridTextSearch
     {
         // Using a DependencyProperty as the backing store for SearchValue.  This enables animation, styling, binding, etc...
@@ -133,7 +134,7 @@ namespace ClientPDS
             return null;
         }
     }
-
+    */
 
 
 

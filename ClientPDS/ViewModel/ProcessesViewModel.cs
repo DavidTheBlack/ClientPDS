@@ -10,6 +10,7 @@ using ClientPDS.HelperClass;
 using System.Windows.Threading;
 using System.Net;
 using System.ComponentModel;
+using System.Data;
 
 namespace ClientPDS
 {
@@ -82,6 +83,25 @@ namespace ClientPDS
             }
         }
 
+        private ProcessInfo _focusedProcess;
+        public ProcessInfo FocusedProcess
+        {
+            get
+            {
+                return _focusedProcess;
+            }
+
+            set
+            {
+                if (_focusedProcess != value)
+                {
+                    _focusedProcess = value;
+                    RaisePropertyChanged("FocusedProcess");
+                }
+
+            }
+        }
+
         private bool _ipTextEnabled;
         public bool IpTextEnabled
         {
@@ -132,8 +152,6 @@ namespace ClientPDS
                 }
             }
         }
-
-
 
         #endregion
 
@@ -245,7 +263,7 @@ namespace ClientPDS
             
 
             //Process added to the list
-            Processes.Add(tmp);
+            Processes.Add(tmp);    
 
             RaisePropertyChanged("Processes");
             return true;
@@ -297,8 +315,19 @@ namespace ClientPDS
             if (System.Int32.TryParse(p.pid, out tmpPid))
             {
                 //Save the focus pid in private var
-                FocusedPid = tmpPid;                
-                return true;
+                FocusedPid = tmpPid;
+
+                //Search for the pid in the processes list
+                //and Update the View
+                foreach (ProcessInfo process in _processes)
+                {
+                    if (process.Pid == tmpPid)
+                    {
+                        FocusedProcess = process;
+                        break;
+                    }
+                }
+                    return true;
             }
             else //Se si verifica errore nella traduzione da stringa  pid intero
                 return false;

@@ -15,8 +15,13 @@
         </Grid.RowDefinitions>
 
         <DataGrid Name ="Apps" ItemsSource="{Binding Path=Processes}" Grid.Row="0" AutoGenerateColumns="False"
-                   local:DataGridTextSearch.SearchValue="{Binding ElementName=FocusedProcessPidTxt, Path=Text, UpdateSourceTrigger=PropertyChanged}" >
-
+                   
+                   SelectedItem="{Binding Path=FocusedProcess}"  SelectionMode="Extended" SelectionUnit="FullRow"                 
+                  >
+            <!-- local:DataGridTextSearch.SearchValue="{Binding ElementName=FocusedProcessPidTxt, Path=Text, UpdateSourceTrigger=PropertyChanged}" -->
+            
+            
+<!--
             <DataGrid.Resources>
                 <local:SearchValueConverter x:Key="SearchValueConverter" />
                 <Style TargetType="{x:Type DataGridCell}">
@@ -39,6 +44,13 @@
                 </Style>
                 
             </DataGrid.Resources>
+
+-->
+
+            
+
+
+
 
             <DataGrid.Columns >
                <!-- <DataGridTextColumn Header="" Binding="{Binding Path=Icon}"></DataGridTextColumn>-->
