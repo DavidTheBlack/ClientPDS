@@ -168,15 +168,21 @@ namespace Network
         /// </summary>
         public void CloseConnection()
         {
-            if (this._remoteIsConnected)
+            //The lock is used in order to prevent simultaneous access to the method 
+            //that can be called from two point
+            lock (this)
             {
-                //Segnalo connessione disconnessione del client
-                this._remote.Shutdown(SocketShutdown.Both);
-                this._remote.Disconnect(true);
-                this._remote.Close();             
-                this._remote = null;
-                this.OnConnectionStateChanged();
+                if (this._remoteIsConnected)
+                {
+                    //Segnalo connessione disconnessione del client
+                    this._remote.Shutdown(SocketShutdown.Both);
+                    this._remote.Disconnect(true);
+                    this._remote.Close();
+                    this._remote = null;
+                    this.OnConnectionStateChanged();
+                }
             }
+            
         }
 
         /// <summary>

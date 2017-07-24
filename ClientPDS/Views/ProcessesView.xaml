@@ -15,46 +15,22 @@
         </Grid.RowDefinitions>
 
         <DataGrid Name ="Apps" ItemsSource="{Binding Path=Processes}" Grid.Row="0" AutoGenerateColumns="False"
-                   
-                   SelectedItem="{Binding Path=FocusedProcess}"  SelectionMode="Extended" SelectionUnit="FullRow"                 
+                   SelectedItem="{Binding Path=FocusedProcess}" SelectionMode="Extended" SelectionUnit="FullRow"  
+                  IsReadOnly="True" IsHitTestVisible="False" 
                   >
-            <!-- local:DataGridTextSearch.SearchValue="{Binding ElementName=FocusedProcessPidTxt, Path=Text, UpdateSourceTrigger=PropertyChanged}" -->
-            
-            
-<!--
+
             <DataGrid.Resources>
-                <local:SearchValueConverter x:Key="SearchValueConverter" />
-                <Style TargetType="{x:Type DataGridCell}">
-                    <Setter Property="local:DataGridTextSearch.IsTextMatch">
-                        <Setter.Value>
-                            <MultiBinding Converter="{StaticResource SearchValueConverter}">
-                                <Binding RelativeSource="{RelativeSource Self}" Path="Content.Text" />
-                                <Binding RelativeSource="{RelativeSource Self}" Path="(local:DataGridTextSearch.SearchValue)" />
-                            </MultiBinding>
-                        </Setter.Value>
-                    </Setter>
-                    <Style.Triggers>
-                        <Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource WindowGlowBrush}" />
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
+
+
                 <Style BasedOn="{StaticResource MetroDataGridColumnHeader}" TargetType="{x:Type DataGridColumnHeader}">
                     <Setter Property="Controls:ControlsHelper.ContentCharacterCasing" Value="Normal" />
                 </Style>
-                
+
             </DataGrid.Resources>
-
--->
-
-            
-
 
 
 
             <DataGrid.Columns >
-               <!-- <DataGridTextColumn Header="" Binding="{Binding Path=Icon}"></DataGridTextColumn>-->
-                
                 <DataGridTemplateColumn  Header="App Name" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -69,7 +45,7 @@
 
                 <DataGridTextColumn Header="Pid" Binding="{Binding Path=Pid}"></DataGridTextColumn>
 
-                <DataGridTextColumn Header="Description" Binding="{Binding Path=Path}"></DataGridTextColumn>
+                <DataGridTextColumn Header="Path" Binding="{Binding Path=Path}"></DataGridTextColumn>
                 
                 <!--<DataGridTextColumn Header="Percentage" Binding="{Binding Path=SimpleValue}></DataGridTextColumn>-->
             </DataGrid.Columns>

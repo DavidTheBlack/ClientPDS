@@ -183,7 +183,12 @@ namespace ClientPDS
         /// <summary>
         /// flag that signals to keep alive the tcp connection or not
         /// </summary>
-        private bool keepConnection = true;
+        private bool keepConnection;
+        /// <summary>
+        /// flag that signals the user has stopped the connection
+        /// </summary>
+        private bool connectionClosedbyUser;
+
 
         //Default Icon Bytes
         private byte[] defaultIcon;
@@ -212,10 +217,11 @@ namespace ClientPDS
         {
             _log = string.Empty;
             _processes = new ObservableCollection<ProcessInfo>();
-            FocusedPid = 0;
             ServerIP = "127.0.0.1";
             ButtonText = "Connect";
             IpTextEnabled = true;
+            keepConnection = true;
+            connectionClosedbyUser = false;
 
             defaultIcon= System.IO.File.ReadAllBytes(@"C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\Resources\icon_def.ico");
 
@@ -386,14 +392,21 @@ namespace ClientPDS
                         //Close the connection 
                         if (netObj.remoteIsConnected)
                             netObj.CloseConnection();
-                        MessageBox.Show("Errore nella ricezione dati dal server.\n" + netObj.log);
+                        if (!connectionClosedbyUser)
+                        {
+                            MessageBox.Show("Server Disconnected");
+
+                        }else
+                        {
+                            connectionClosedbyUser = false;
+                        }
                         return;
                     }
                 }
             }
             else
             {
-                MessageBox.Show("Impossibile connettersi al server.\n" + netObj.log);
+                MessageBox.Show("Server is not reachable.\n" + netObj.log);
                 return;
             }
             
@@ -477,6 +490,7 @@ namespace ClientPDS
         /// </summary>
         private void handleConnectionStateChange(object source, EventArgs e)
         {
+            
             updateConnectionInterface += updateConnectionGuiElement;
             Application.Current.Dispatcher.Invoke(updateConnectionInterface, netObj.remoteIsConnected);
             updateConnectionInterface -= updateConnectionGuiElement;
@@ -506,10 +520,11 @@ namespace ClientPDS
 
         public void CloseConnection()
         {
+            this.connectionClosedbyUser = true;
             this.keepConnection = false;
             if (netObj != null && netObj.remoteIsConnected)
             {
-                netObj.SendVarData("exit");
+                netObj.SendVarData("-1|exit");
                 netObj.CloseConnection();
             }
             //Clear the processes list
