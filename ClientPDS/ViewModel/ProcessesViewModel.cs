@@ -223,7 +223,7 @@ namespace ClientPDS
             keepConnection = true;
             connectionClosedbyUser = false;
 
-            defaultIcon= System.IO.File.ReadAllBytes(@"C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\Resources\icon_def.ico");
+            defaultIcon= System.IO.File.ReadAllBytes("..\\..\\Resources\\icon_def.ico");
 
 
         }
