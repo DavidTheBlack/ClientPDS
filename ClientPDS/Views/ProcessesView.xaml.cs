@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ClientPDS.Views;
 
 namespace ClientPDS
 {
@@ -79,7 +80,12 @@ namespace ClientPDS
             _viewModel.CloseConnection();
         }
 
-}
+        private void ShortcutBtn_Click(object sender, RoutedEventArgs e)
+        {
+            ShortcutWindow sw = new ShortcutWindow();
+            sw.Show();
+        }
+    }
     
     
 

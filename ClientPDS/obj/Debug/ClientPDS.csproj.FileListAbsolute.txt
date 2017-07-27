@@ -60,3 +60,5 @@ C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\obj\Deb
 C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\obj\Debug\Views\ProcessesView.g.cs
 C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\obj\Debug\GeneratedInternalTypeHelper.g.cs
 C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\obj\Debug\Views\ProcessesView.baml
+C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\obj\Debug\Views\ShortcutWindow.g.cs
+C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\obj\Debug\Views\ShortcutWindow.baml

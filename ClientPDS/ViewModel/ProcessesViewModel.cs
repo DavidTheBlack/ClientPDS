@@ -64,20 +64,16 @@ namespace ClientPDS
 
         #region interfaceVariables
 
-        private int _focusedPid;
-        public int FocusedPid
+        private bool _shortcutBtnEnabled;
+        public bool ShortcutBtnEnabled
         {
-            get
-            {
-                return _focusedPid;
-            }
-
+            get { return _shortcutBtnEnabled; }
             set
             {
-                if (_focusedPid != value)
+                if (_shortcutBtnEnabled != value)
                 {
-                    _focusedPid = value;
-                    RaisePropertyChanged("FocusedPid");
+                    _shortcutBtnEnabled = value;
+                    RaisePropertyChanged("ShortcutBtnEnabled");
                 }
 
             }
@@ -153,6 +149,11 @@ namespace ClientPDS
             }
         }
 
+
+
+
+
+
         #endregion
 
         #region fields and properties
@@ -220,8 +221,11 @@ namespace ClientPDS
             ServerIP = "127.0.0.1";
             ButtonText = "Connect";
             IpTextEnabled = true;
+            ShortcutBtnEnabled = false;
             keepConnection = true;
             connectionClosedbyUser = false;
+
+
 
             defaultIcon= System.IO.File.ReadAllBytes("..\\..\\Resources\\icon_def.ico");
 
@@ -320,8 +324,7 @@ namespace ClientPDS
 
             if (System.Int32.TryParse(p.pid, out tmpPid))
             {
-                //Save the focus pid in private var
-                FocusedPid = tmpPid;
+                
 
                 //Search for the pid in the processes list
                 //and Update the View
@@ -502,12 +505,14 @@ namespace ClientPDS
             {
                 ButtonText = "Disconnect";
                 IpTextEnabled = false;
+                ShortcutBtnEnabled = true;
 
             }
             else //Server is disconnected
             {
                 ButtonText = "Connect";
                 IpTextEnabled = true;
+                ShortcutBtnEnabled = false;
                 //Clear the processes list
                 Processes.Clear();
             }

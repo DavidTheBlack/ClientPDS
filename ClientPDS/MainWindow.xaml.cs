@@ -29,13 +29,15 @@ namespace ClientPDS
 
         private void ProcessesViewControl_Loaded(object sender, RoutedEventArgs e)
         {
-            //Eseguire eventuali metodi di inizializzazione del viewmodel            
+            //Per eseguire eventuali metodi di inizializzazione del viewmodel            
             processesViewModelObj= (ProcessesViewModel)ProcessesViewControl.DataContext;            
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             processesViewModelObj.closeApplication();            
+            Application.Current.Shutdown();   
+                    
         }
 
 

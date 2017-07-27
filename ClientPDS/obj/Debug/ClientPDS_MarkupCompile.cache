@@ -10,11 +10,11 @@ none
 false
 DEBUG;TRACE
 C:\Users\David\Documents\Visual Studio 2015\Projects\ClientPDS\ClientPDS\App.xaml
-2-941208575
+3-6469482
 1306643699
-11-2002368325
+12-1468422343
 16-1001136895
-MainWindow.xaml;Views\ProcessesView.xaml;
+MainWindow.xaml;Views\ProcessesView.xaml;Views\ShortcutWindow.xaml;
 
 False
 
