@@ -82,7 +82,8 @@ namespace ClientPDS
 
         private void ShortcutBtn_Click(object sender, RoutedEventArgs e)
         {
-            ShortcutWindow sw = new ShortcutWindow();
+            ShortcutWindow sw = new ShortcutWindow(_viewModel);
+            sw.DataContext = _viewModel;
             sw.Show();
         }
     }

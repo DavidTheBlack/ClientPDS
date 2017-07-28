@@ -6,6 +6,7 @@
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:local="clr-namespace:ClientPDS.Views"        
         mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
         Title="ShortcutWindow" Height="250" Width="400"
                       Style="{DynamicResource VSWindowStyleKey}"
                       KeyDown="TextBox_KeyDown" KeyUp="TextBox_KeyUp"  
@@ -21,7 +22,7 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid>
+    <Grid >
         <Grid.RowDefinitions>
             <RowDefinition />
             <RowDefinition />

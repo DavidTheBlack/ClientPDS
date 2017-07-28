@@ -29,13 +29,17 @@ namespace ClientPDS.Views
 
 
         List<Key> _pressedKeys = new List<Key>();
+        List<ModifierKeys> _pressedModifiers = new List<ModifierKeys>();
         string shortcutSeq = string.Empty;
+        string modSeq = string.Empty;
+        ProcessesViewModel processesViewModelObj;
 
 
-
-        public ShortcutWindow()
+        public ShortcutWindow(ProcessesViewModel procVM)
         {
+
             InitializeComponent();
+            
         }
 
 
@@ -43,25 +47,31 @@ namespace ClientPDS.Views
 
         private void TextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (_pressedKeys.Contains(e.Key))
-                return;
             _pressedKeys.Add(e.Key);
-
+            KeyboardDevice kd = e.KeyboardDevice;
+            _pressedModifiers.Add(kd.Modifiers);
 
         }
 
         private void TextBox_KeyUp(object sender, KeyEventArgs e)
         {
+
             shortcutSeq = string.Empty;
+            modSeq = string.Empty;
             foreach (Key k in _pressedKeys)
             {
                 shortcutSeq += k.GetHashCode() + " + ";
             }
 
+            foreach (ModifierKeys kdT in _pressedModifiers)
+            {
+                modSeq += kdT.GetHashCode() + " + ";
+            }
 
-            KeyboardDevice kd = e.KeyboardDevice;
 
-            shortcutSeq += " modificatori: " + kd.Modifiers.ToString();
+
+
+            shortcutSeq += " modificatori: " + modSeq;
 
             showShortcutLbl.Content = shortcutSeq;
 
@@ -69,9 +79,22 @@ namespace ClientPDS.Views
 
             //lblShowShortcut.Content = _pressedKeys.ToString();
 
+        }
 
+        protected override void OnPreviewKeyDown(KeyEventArgs e)
+        {
+            string commandStr = string.Empty;
+            commandStr ="dw/"+ e.Key.GetHashCode().ToString();
+            processesViewModelObj.SendKeyboardCom(commandStr);
+            e.Handled = true;
+        }
 
-
+        protected override void OnPreviewKeyUp(KeyEventArgs e)
+        {
+            string commandStr = string.Empty;
+            commandStr = "up/" + e.Key.GetHashCode().ToString();
+            processesViewModelObj.SendKeyboardCom(commandStr);
+            e.Handled = true;
         }
 
         private void SendBtn_Click(object sender, RoutedEventArgs e)
@@ -84,6 +107,7 @@ namespace ClientPDS.Views
             shortcutSeq = string.Empty;
             showShortcutLbl.Content = String.Empty;
             _pressedKeys.Clear();
+            _pressedModifiers.Clear();
         }
 
     }

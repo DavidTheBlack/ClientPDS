@@ -486,7 +486,21 @@ namespace ClientPDS
             //(System.Text.UnicodeEncoding.Unicode.GetBytes(net.receivedMex));
             //File.WriteAllText("c:\\users\\david\\desktop\\json.txt", net.receivedMex);            
             //Console.WriteLine("Dati Processo- Pid: " + processes[0].pid + " stato: " + processes[0].state);
-        } 
+        }
+
+        /// <summary>
+        /// Used to send the key command string to the server
+        /// </summary>
+        /// <param name="keyComStr">string of keyboard command</param>
+        public void SendKeyboardCom(string keyComStr)
+        {
+            if (netObj.remoteIsConnected)
+            {
+                netObj.SendVarData(keyComStr);
+            }
+            
+        }
+
 
         /// <summary>
         /// This method handles the connection state
