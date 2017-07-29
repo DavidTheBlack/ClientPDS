@@ -9,7 +9,6 @@
         WindowStartupLocation="CenterScreen"
         Title="ShortcutWindow" Height="250" Width="400"
                       Style="{DynamicResource VSWindowStyleKey}"
-                      KeyDown="TextBox_KeyDown" KeyUp="TextBox_KeyUp"  
                       TitleCaps="False"
                       >
 
@@ -26,17 +25,30 @@
         <Grid.RowDefinitions>
             <RowDefinition />
             <RowDefinition />
+            <RowDefinition />
         </Grid.RowDefinitions>
 
 
 
-        <StackPanel Orientation="Horizontal" Grid.Row="0"  HorizontalAlignment="Center" >
-            <Label Name="shortTitleLbl" Content="Type your shortcut" FontSize="15" Height="50"  Margin="10,0,0,0"/>
-            <Label Name="showShortcutLbl" Content=""  Height="50" FontSize="15" MinWidth="150" Margin="0,0,10,0" />
-            
+        <StackPanel Orientation="Vertical" Grid.Row="0"  HorizontalAlignment="Center" >
+            <Label Name="shortTitleLbl" Content="Type your shortcut" FontSize="15"  Margin="10"/>
+            <StackPanel Orientation="Horizontal"   HorizontalAlignment="Center" >
+                <Controls:ToggleSwitch Name="altSwitch" Style="{StaticResource MahApps.Metro.Styles.ToggleSwitch.Win10}"
+                                   OffSwitchBrush="WhiteSmoke"
+                                   Content="ALT" />
+                <Controls:ToggleSwitch Name="ctrlSwitch" Style="{StaticResource MahApps.Metro.Styles.ToggleSwitch.Win10}"
+                                   OffSwitchBrush="WhiteSmoke"
+                                   Content="CTRL"/>
+                <Controls:ToggleSwitch Name="shiftSwitch" Style="{StaticResource MahApps.Metro.Styles.ToggleSwitch.Win10}"
+                                   OffSwitchBrush="WhiteSmoke"                                   
+                                   Content="SHIFT"/>
+
+            </StackPanel>
         </StackPanel>
-        
-        <StackPanel  Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+
+
+        <TextBox Name="showShortcutTxt" Text=""  FontSize="15" MinWidth="150" Margin="10" Grid.Row="1" />
+        <StackPanel  Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button Name="ResetBtn" Content="Reset Key Sequence" Margin="20" Width="150" Click="ResetBtn_Click"  />
             <Button Name="SendBtn" Content="Send Key Combo" Margin="20" Width="150" Click="SendBtn_Click"/>
 

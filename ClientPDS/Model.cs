@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
@@ -10,17 +11,17 @@ namespace ClientPDS
     public class ProcessInfoModel { }
     
      
-    public class ProcessInfo //: INotifyPropertyChanged
+    public class ProcessInfo : INotifyPropertyChanged
         {
 
-        //public event PropertyChangedEventHandler PropertyChanged;
-        //private void RaisePropertyChanged(string property)
-        //{
-         //   if (PropertyChanged != null)
-        //    {
-        //        PropertyChanged(this, new PropertyChangedEventArgs(property));
-        //    }
-        //}
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void RaisePropertyChanged(string property)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(property));
+            }
+        }
 
 
         private int _pid;
@@ -32,7 +33,7 @@ namespace ClientPDS
                 if (value != _pid)
                 {
                     _pid = value;
-                    //RaisePropertyChanged("Pid");
+                    RaisePropertyChanged("Pid");
                 }
             }
         }
@@ -49,7 +50,7 @@ namespace ClientPDS
                 if (value != _title)
                 {
                     _title = value;
-                    //RaisePropertyChanged("Title");
+                    RaisePropertyChanged("Title");
                 }                
             }
         }
@@ -67,7 +68,7 @@ namespace ClientPDS
                 if (value != _path)
                 {
                     _path = value;
-                    //RaisePropertyChanged("Path");
+                    RaisePropertyChanged("Path");
                 }
             }
         }
@@ -85,10 +86,51 @@ namespace ClientPDS
                 if (value != _icon)
                 {
                     _icon = value;
-                    //RaisePropertyChanged("Icon");
+                    RaisePropertyChanged("Icon");
                 }
             }
         }
+
+        /// <summary>
+        /// Istante di tempo nel quale l'applicazione riceve il focus
+        /// </summary>
+        private TimeSpan _focusTimeStamp;
+        public TimeSpan FocusTimeStamp
+        {
+            get {
+                return _focusTimeStamp;
+            }
+            set
+            {
+                if (value != _focusTimeStamp)
+                    _focusTimeStamp = value;
+            }
+        }
+        /// <summary>
+        /// Total time the process is focused
+        /// </summary>
+        private TimeSpan _totalFocusTime ;
+        public TimeSpan TotalFocusTime
+        {
+            get { return _totalFocusTime; }
+            set { if (value != _totalFocusTime)
+                    _totalFocusTime = value;
+            }
+        }
+
+        /// <summary>
+        /// Total percentge time 
+        /// </summary>
+        private double _focusPercentage;
+        public double FocusPercentage
+        {
+            get { return _focusPercentage; }
+            set { if (_focusPercentage != value)
+                    _focusPercentage = value;
+                RaisePropertyChanged("FocusPercentage");
+            }
+        }
+
     }
 
     /// <summary>

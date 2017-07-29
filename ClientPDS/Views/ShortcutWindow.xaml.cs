@@ -37,17 +37,46 @@ namespace ClientPDS.Views
 
         public ShortcutWindow(ProcessesViewModel procVM)
         {
-
-            InitializeComponent();
-            
+            processesViewModelObj = procVM;
+            InitializeComponent();            
         }
 
 
        
-
+/*
         private void TextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            _pressedKeys.Add(e.Key);
+            //Controllo se il tasto è un modificatore
+            //se lo è esco e non faccio nulla
+
+            //se no nè un modificatore 
+            //prelevo il tasto
+            //controllo i modificatori premuti
+            //invio il dato al server
+
+            switch (e.Key)
+            {
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                case Key.System:
+                case Key.LeftCtrl:
+                case Key.RightCtrl:
+                case Key.LeftShift:
+                case Key.RightShift:
+                    {
+                        e.Handled = true;
+                        break;
+                    }
+            }
+
+            if (!e.Handled)
+            {
+                Keyboard.Modifiers.GetHashCode();
+
+            }
+
+
+                    _pressedKeys.Add(e.Key);
             KeyboardDevice kd = e.KeyboardDevice;
             _pressedModifiers.Add(kd.Modifiers);
 
@@ -73,7 +102,7 @@ namespace ClientPDS.Views
 
             shortcutSeq += " modificatori: " + modSeq;
 
-            showShortcutLbl.Content = shortcutSeq;
+            //showShortcutLbl.Content = shortcutSeq;
 
 
 
@@ -83,29 +112,76 @@ namespace ClientPDS.Views
 
         protected override void OnPreviewKeyDown(KeyEventArgs e)
         {
+
+
+
+
             string commandStr = string.Empty;
-            commandStr ="dw/"+ e.Key.GetHashCode().ToString();
+
+            //Controllo se il tasto è un modificatore
+            //se lo è esco e non faccio nulla
+
+            //se no nè un modificatore 
+            //prelevo il tasto
+            //controllo i modificatori premuti
+            //invio il dato al server
+
+            switch (e.Key)
+            {
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                case Key.System:
+                case Key.LeftCtrl:
+                case Key.RightCtrl:
+                case Key.LeftShift:
+                case Key.RightShift:
+                    {
+                        e.Handled = true;
+                        break;
+                    }
+            }
+
+            if (!e.Handled)
+            {
+                string modifiers = Keyboard.Modifiers.GetHashCode().ToString();
+                commandStr = "dw/" + modifiers + "/"+KeyInterop.VirtualKeyFromKey(e.Key);
+            }
             processesViewModelObj.SendKeyboardCom(commandStr);
             e.Handled = true;
         }
 
         protected override void OnPreviewKeyUp(KeyEventArgs e)
         {
+
             string commandStr = string.Empty;
-            commandStr = "up/" + e.Key.GetHashCode().ToString();
+            string modifiers = Keyboard.Modifiers.GetHashCode().ToString();
+            commandStr = "dw/" + modifiers + "/" + KeyInterop.VirtualKeyFromKey(e.Key);
+
             processesViewModelObj.SendKeyboardCom(commandStr);
             e.Handled = true;
         }
+        */
+
+
+
 
         private void SendBtn_Click(object sender, RoutedEventArgs e)
         {
-
+            string commandStr;
+            commandStr = "dw/" + KeyInterop.VirtualKeyFromKey(Key.System);
+            processesViewModelObj.SendKeyboardCom(commandStr);
+            commandStr = "dw/126";
+            processesViewModelObj.SendKeyboardCom(commandStr);
+            commandStr = "up/126";
+            processesViewModelObj.SendKeyboardCom(commandStr);
+            commandStr = "up/" + KeyInterop.VirtualKeyFromKey(Key.System);
+            processesViewModelObj.SendKeyboardCom(commandStr);
         }
 
         private void ResetBtn_Click(object sender, RoutedEventArgs e)
         {
             shortcutSeq = string.Empty;
-            showShortcutLbl.Content = String.Empty;
+           // showShortcutLbl.Content = String.Empty;
             _pressedKeys.Clear();
             _pressedModifiers.Clear();
         }

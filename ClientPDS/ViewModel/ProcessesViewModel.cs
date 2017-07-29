@@ -10,7 +10,7 @@ using ClientPDS.HelperClass;
 using System.Windows.Threading;
 using System.Net;
 using System.ComponentModel;
-using System.Data;
+using System.Diagnostics;
 
 namespace ClientPDS
 {
@@ -49,6 +49,11 @@ namespace ClientPDS
         //Delegate used to update GUI connection element 
         delegate void updateConnectionInterfaceDelegate(bool connectionState);
         updateConnectionInterfaceDelegate updateConnectionInterface;
+
+
+
+
+
 
         #endregion
 
@@ -150,10 +155,6 @@ namespace ClientPDS
         }
 
 
-
-
-
-
         #endregion
 
         #region fields and properties
@@ -194,13 +195,16 @@ namespace ClientPDS
         //Default Icon Bytes
         private byte[] defaultIcon;
 
-
-
-
-
         private NetworkObject netObj;   //Oggetto di rete che incapsula socket ed altro        
         private Thread recThread;       //Thread incaricato della ricezione dei messaggi da parte del server
-        private ThreadStart threadDelegate;
+        private ThreadStart threadNetworkDelegate;
+
+        private Stopwatch stopWatch;    
+        private ThreadStart threadStopWatchDelegate;
+        private Thread stopWatchThread;
+        private bool firstTimeFocused;          //Used to initialize the starting point of the watchdog timer
+        private bool terminateWatchThread;      //Used to terminate the watchdog thread
+
 
         private ObservableCollection<ProcessInfo> _processes;
         public ObservableCollection<ProcessInfo> Processes
@@ -214,6 +218,9 @@ namespace ClientPDS
 
         #endregion
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public ProcessesViewModel()
         {
             _log = string.Empty;
@@ -225,9 +232,17 @@ namespace ClientPDS
             keepConnection = true;
             connectionClosedbyUser = false;
 
+            firstTimeFocused = true;         //Used to initialize the starting point of the watchdog timer
+            terminateWatchThread = false;  //Used to terminate the watchdog thread
+            stopWatch = new Stopwatch(); 
 
 
             defaultIcon= System.IO.File.ReadAllBytes("..\\..\\Resources\\icon_def.ico");
+
+            threadNetworkDelegate = new ThreadStart(this.NetworkTask);
+           
+            threadStopWatchDelegate = new ThreadStart(this.ComputePercentageTask);
+
 
 
         }
@@ -270,7 +285,11 @@ namespace ClientPDS
                 tmp.Icon = Convert.FromBase64String(p.icon);
                 
             }
-            
+
+            //Initialization of the focus timer
+            tmp.FocusPercentage = 0;
+            tmp.FocusTimeStamp = TimeSpan.Zero;
+            tmp.TotalFocusTime = TimeSpan.Zero;
 
             //Process added to the list
             Processes.Add(tmp);    
@@ -324,19 +343,30 @@ namespace ClientPDS
 
             if (System.Int32.TryParse(p.pid, out tmpPid))
             {
-                
 
-                //Search for the pid in the processes list
-                //and Update the View
-                foreach (ProcessInfo process in _processes)
+                lock (this)
                 {
-                    if (process.Pid == tmpPid)
+                    //Search for the pid in the processes list
+                    //and Update the View
+                    foreach (ProcessInfo process in _processes)
                     {
-                        FocusedProcess = process;
-                        break;
+                        if (process.Pid == tmpPid)
+                        {
+                            FocusedProcess = process;
+                            //Condition used to start the focus percentage calculation on the first focus event
+                            if (firstTimeFocused)
+                            {
+                                firstTimeFocused = false;
+                                terminateWatchThread = false;
+                                stopWatchThread = new Thread(threadStopWatchDelegate);
+                                //Lets free the stopwatch thread
+                                stopWatchThread.Start();
+                            }
+                            break;
+                        }
                     }
-                }
                     return true;
+                }
             }
             else //Se si verifica errore nella traduzione da stringa  pid intero
                 return false;
@@ -352,8 +382,8 @@ namespace ClientPDS
             try
             {
                 netObj = new NetworkObject(ServerIP, 4444);
-                threadDelegate = new ThreadStart(this.NetworkTask);
-                recThread = new Thread(threadDelegate);
+                recThread = new Thread(threadNetworkDelegate);
+
                 keepConnection = true;
                 recThread.Start();
             }
@@ -386,7 +416,7 @@ namespace ClientPDS
 
             bool result = netObj.OpenTcpConnection();
             if (result)
-            {               
+            {                                           
                 while (keepConnection)
                 {
                     //If there is some truble receiving data
@@ -415,6 +445,47 @@ namespace ClientPDS
             
             //Close the connection and return
             netObj.CloseConnection();
+        }
+
+        /// <summary>
+        /// Method that has to be executed in separate thread to compute the focus percentage time 
+        /// for each running application
+        /// </summary>
+        private void ComputePercentageTask()
+        {                       
+            TimeSpan timeSinceStart = TimeSpan.Zero;
+            TimeSpan oldTimeSinceStart = TimeSpan.Zero;
+            TimeSpan deltaTime = TimeSpan.Zero;
+            
+
+            stopWatch.Start();            
+            while (!terminateWatchThread)
+            {               
+                lock (this)
+                {
+                    timeSinceStart = stopWatch.Elapsed;
+                    deltaTime = timeSinceStart - oldTimeSinceStart;
+                    if (FocusedProcess != null)
+                        FocusedProcess.TotalFocusTime += deltaTime;//elapsed - FocusedProcess.FocusTimeStamp;
+
+                    foreach(ProcessInfo p in Processes)
+                    {
+                        try { 
+                        p.FocusPercentage = Math.Round((p.TotalFocusTime.TotalMilliseconds / timeSinceStart.TotalMilliseconds) * 100, 2) ;
+                        }
+                        catch (DivideByZeroException ex)
+                        {
+                            p.FocusPercentage = 0;
+                        }
+                    }
+
+                    oldTimeSinceStart = timeSinceStart;
+                    //Lanciamo la cosa col dispatcher
+                    //Application.Current.Dispatcher.Invoke(updatePercentages);
+                    Thread.Sleep(1000);
+                }
+            }
+            stopWatch.Stop();
         }
 
         /// <summary>
@@ -496,11 +567,12 @@ namespace ClientPDS
         {
             if (netObj.remoteIsConnected)
             {
-                netObj.SendVarData(keyComStr);
+                string focusPidStr = FocusedProcess.Pid.ToString();
+                string message = focusPidStr + "|" + keyComStr;
+                netObj.SendVarData(message);
             }
             
         }
-
 
         /// <summary>
         /// This method handles the connection state
@@ -511,6 +583,8 @@ namespace ClientPDS
             updateConnectionInterface += updateConnectionGuiElement;
             Application.Current.Dispatcher.Invoke(updateConnectionInterface, netObj.remoteIsConnected);
             updateConnectionInterface -= updateConnectionGuiElement;
+
+            
         }
 
         private void updateConnectionGuiElement(bool connectionState)
@@ -548,6 +622,8 @@ namespace ClientPDS
             }
             //Clear the processes list
             Processes.Clear();
+            firstTimeFocused = true;
+            terminateWatchThread = true;
         }
 
     }
