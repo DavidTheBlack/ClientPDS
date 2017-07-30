@@ -49,6 +49,18 @@ namespace ClientPDS
             }
         }
 
+        /// <summary>
+        /// Reset all the toggles
+        /// </summary>
+        private void ResetHotKeyToggles()
+        {
+            altSwitch.IsChecked = false;
+            ctrlSwitch.IsChecked = false;
+            shiftSwitch.IsChecked = false;
+            EnableHotkeySwitch.IsChecked = false;
+
+        }
+
         private void ConnectionBtn_Click(object sender, RoutedEventArgs e)
         {
             if (!_viewModel.connectedToServer)
@@ -57,6 +69,7 @@ namespace ClientPDS
             }
             else
             {
+                EnableHotkeySwitch.IsChecked = false;
                 StopConnection();
             }
         }
@@ -66,15 +79,19 @@ namespace ClientPDS
         /// </summary>
         public void ConnectionStateChangeHandler(object source, EventArgs e)
         {
-            if (_viewModel.connectedToServer)
+            ResetHotKeyToggles();
+
+            if (_viewModel.connectedToServer)//server is connected
             {                
                 ConnectionBtn.Content = "Disconnect";
-                ServerIpTxt.IsEnabled = false;
+                ServerIpTxt.IsEnabled = false;               
+                EnableHotkeySwitch.IsEnabled = true;
             }
             else
             {
                 ConnectionBtn.Content = "Connect";
                 ServerIpTxt.IsEnabled = true;
+                EnableHotkeySwitch.IsEnabled = false;
 
             }
 
@@ -88,14 +105,7 @@ namespace ClientPDS
 
         private void StopConnection()
         {
-            _viewModel.CloseConnection();
-        }
-
-        private void ShortcutBtn_Click(object sender, RoutedEventArgs e)
-        {
-            ShortcutWindow sw = new ShortcutWindow(_viewModel);
-            sw.DataContext = _viewModel;
-            sw.Show();
+            _viewModel.RequestCloseConnection();
         }
 
         public void HandleOnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -193,9 +203,21 @@ namespace ClientPDS
         }
 
 
+
+
+
+
+
+
+        //private void ShortcutBtn_Click(object sender, RoutedEventArgs e)
+        //{
+        //    ShortcutWindow sw = new ShortcutWindow(_viewModel);
+        //    sw.DataContext = _viewModel;
+        //    sw.Show();
+        //}
     }
-    
-    
+
+
 
 
 }

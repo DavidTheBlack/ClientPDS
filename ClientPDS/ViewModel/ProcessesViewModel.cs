@@ -46,6 +46,9 @@ namespace ClientPDS
         delegate bool editProcessesDelegate(ProcessInfoJsonStr p);
         editProcessesDelegate editProcesses;
 
+        delegate void clearProcessesDelegate();
+        clearProcessesDelegate clearProcesses;
+
         //Delegate used to update GUI connection element 
         delegate void updateConnectionInterfaceDelegate(bool connectionState);
         updateConnectionInterfaceDelegate updateConnectionInterface;
@@ -64,6 +67,7 @@ namespace ClientPDS
         const string windowClosed = "2";
         const string windowFocused = "3";
         const string noIconWindow = "NoIcon";
+        
 
         #endregion
 
@@ -182,10 +186,7 @@ namespace ClientPDS
             }
         }
 
-        /// <summary>
-        /// flag that signals to keep alive the tcp connection or not
-        /// </summary>
-        private bool keepConnection;
+
         /// <summary>
         /// flag that signals the user has stopped the connection
         /// </summary>
@@ -229,11 +230,10 @@ namespace ClientPDS
             ButtonText = "Connect";
             IpTextEnabled = true;
             ShortcutToggleEnabled = false;
-            keepConnection = true;
             connectionClosedbyUser = false;
 
-            firstTimeFocused = true;         //Used to initialize the starting point of the watchdog timer
-            terminateWatchThread = false;  //Used to terminate the watchdog thread
+            firstTimeFocused = true;            //Used to initialize the starting point of the watchdog timer
+            terminateWatchThread = false;       //Used to terminate the watchdog thread
             stopWatch = new Stopwatch(); 
 
 
@@ -333,6 +333,15 @@ namespace ClientPDS
         }
 
         /// <summary>
+        /// Method used to clear the processes list
+        /// </summary>
+        public void clearProcessesList()
+        {
+            Processes.Clear();
+            RaisePropertyChanged("Processes");
+        }
+
+        /// <summary>
         /// Update the focussed process
         /// </summary>
         /// <param name="p">process info json string object</param>
@@ -384,13 +393,11 @@ namespace ClientPDS
                 netObj = new NetworkObject(ServerIP, 4444);
                 recThread = new Thread(threadNetworkDelegate);
 
-                keepConnection = true;
                 recThread.Start();
             }
             catch(Exception ex)
             {
                 _log = ex.Message;
-                keepConnection = false;
                 return false;
             }
             
@@ -411,87 +418,60 @@ namespace ClientPDS
             //2 ricezione dei messaggi
             //3 inserimento nella coda dei messaggi            
             //Register to the event
-            netObj.messageReceived += handleReceivedMex;
-            netObj.connectionStateChanged += handleConnectionStateChange;
+            netObj.messageReceived += HandleReceivedMex;
+            netObj.connectionStateChanged += HandleConnectionStateChange;
 
             bool result = netObj.OpenTcpConnection();
             if (result)
             {                                           
-                while (keepConnection)
+                while (true)
                 {
                     //If there is some truble receiving data
                     if (!netObj.ReceiveData())
                     {
-                        //Close the connection 
-                        if (netObj.remoteIsConnected)
-                            netObj.CloseConnection();
-                        if (!connectionClosedbyUser)
-                        {
-                            MessageBox.Show("Server Disconnected");
-
-                        }else
-                        {
-                            connectionClosedbyUser = false;
-                        }
-                        return;
+                        //The connection is already closed                                              
+                        break;
                     }
                 }
             }
             else
             {
                 MessageBox.Show("Server is not reachable.\n" + netObj.log);
-                return;
             }
-            
-            //Close the connection and return
-            netObj.CloseConnection();
+
+            netObj.messageReceived -= HandleReceivedMex;
+            netObj.connectionStateChanged -= HandleConnectionStateChange;
+
         }
 
         /// <summary>
-        /// Method that has to be executed in separate thread to compute the focus percentage time 
-        /// for each running application
+        /// Start procedures for closing in a proper way the connection with the server
         /// </summary>
-        private void ComputePercentageTask()
-        {                       
-            TimeSpan timeSinceStart = TimeSpan.Zero;
-            TimeSpan oldTimeSinceStart = TimeSpan.Zero;
-            TimeSpan deltaTime = TimeSpan.Zero;
-            
-
-            stopWatch.Start();            
-            while (!terminateWatchThread)
-            {               
-                lock (this)
-                {
-                    timeSinceStart = stopWatch.Elapsed;
-                    deltaTime = timeSinceStart - oldTimeSinceStart;
-                    if (FocusedProcess != null)
-                        FocusedProcess.TotalFocusTime += deltaTime;//elapsed - FocusedProcess.FocusTimeStamp;
-
-                    foreach(ProcessInfo p in Processes)
-                    {
-                        try { 
-                        p.FocusPercentage = Math.Round((p.TotalFocusTime.TotalMilliseconds / timeSinceStart.TotalMilliseconds) * 100, 2) ;
-                        }
-                        catch (DivideByZeroException ex)
-                        {
-                            p.FocusPercentage = 0;
-                        }
-                    }
-
-                    oldTimeSinceStart = timeSinceStart;
-                    //Lanciamo la cosa col dispatcher
-                    //Application.Current.Dispatcher.Invoke(updatePercentages);
-                    Thread.Sleep(1000);
-                }
+        public void RequestCloseConnection()
+        {
+            connectionClosedbyUser = true;
+            if (netObj != null && netObj.remoteIsConnected)
+            {
+                netObj.SendVarData(NetworkObject.closeRequest);
             }
-            stopWatch.Stop();
+        }
+
+        /// <summary>
+        /// This method handles the connection state
+        /// </summary>
+        private void HandleConnectionStateChange(object source, EventArgs e)
+        {
+
+            connectionClosedbyUser = false;
+            updateConnectionInterface += UpdateConnectionGuiElement;
+            Application.Current.Dispatcher.Invoke(updateConnectionInterface, netObj.remoteIsConnected);
+            updateConnectionInterface -= UpdateConnectionGuiElement;
         }
 
         /// <summary>
         /// This method handles the received mex from the server popping them from the messages queue
         /// </summary>
-        private void handleReceivedMex(object source, EventArgs e)
+        private void HandleReceivedMex(object source, EventArgs e)
         {
             List<ProcessInfoJsonStr> processesList = new List<ProcessInfoJsonStr>();
 
@@ -503,6 +483,19 @@ namespace ClientPDS
                 if(netObj.GetMessage(out recBuf))
                 {
                     //Processo il messaggio
+                    string recMessStr = System.Text.UnicodeEncoding.Unicode.GetString(recBuf);
+                    switch (recMessStr)
+                    {
+                        case NetworkObject.connLost:        //Connection lost because the server shutdown the socket
+                        case NetworkObject.closeRequest:    //The connection was closed in proper way
+                            {
+                                HandleDisconnectionMex(recMessStr);
+                                return;
+                                break;
+                            }                                                      
+                    }
+
+
                     MemoryStream ms = new MemoryStream(recBuf);
                     try
                     {
@@ -511,12 +504,12 @@ namespace ClientPDS
                     catch (Exception ex)
                     {
                         MessageBox.Show("Errore di deserializzazione: " + ex.Message);
-                        //Test if the received mex is a protocol message (Closing connection for example)
-                        if (System.Text.UnicodeEncoding.Unicode.GetString(recBuf) == "exit")
-                        {
-                            //exit the method
-                            break;
-                        }
+                        //Test if the received mex is a protocol message (Closing connection for example) //NOn è più raggiungibile
+                        //if (System.Text.UnicodeEncoding.Unicode.GetString(recBuf) == "conn_term")
+                        //{
+                        //    //exit the method
+                        //    break;
+                        //}
                     }
 
                     foreach (ProcessInfoJsonStr p in processesList)
@@ -557,6 +550,43 @@ namespace ClientPDS
             //(System.Text.UnicodeEncoding.Unicode.GetBytes(net.receivedMex));
             //File.WriteAllText("c:\\users\\david\\desktop\\json.txt", net.receivedMex);            
             //Console.WriteLine("Dati Processo- Pid: " + processes[0].pid + " stato: " + processes[0].state);
+        }       
+
+        /// <summary>
+        /// Handle the network disconnection analizing the received disconnection message
+        /// </summary>
+        /// <param name="disconnectMex">message received from the network object</param>
+        public void HandleDisconnectionMex(string disconnectionMex)
+        {
+            
+
+            terminateWatchThread = true;    //Stop the percentage calculation in the stopWatchThread
+            firstTimeFocused = true;        //Used to start the StopWatchThreadat the next connection
+
+            switch (disconnectionMex)
+            {
+                case NetworkObject.closeRequest:
+                    if (!connectionClosedbyUser)
+                    {
+                        MessageBox.Show("Server disconnected");
+                    }
+                    break;
+                case NetworkObject.connLost:
+                    MessageBox.Show("Connection to the server lost - check you network");
+                    break;
+            }
+
+            netObj.CloseConnection();       //Close the socket and dispose the network resources
+
+            // //Clear the processes list
+            //// try {
+            //         clearProcesses += clearProcessesList;
+            //         Application.Current.Dispatcher.Invoke(clearProcesses);
+            //         clearProcesses -= clearProcessesList;
+            // //}catch(System.NullReferenceException ex)
+
+
+
         }
 
         /// <summary>
@@ -575,20 +605,51 @@ namespace ClientPDS
         }
 
         /// <summary>
-        /// This method handles the connection state
+        /// Method that has to be executed in separate thread to compute the focus percentage time 
+        /// for each running application
         /// </summary>
-        private void handleConnectionStateChange(object source, EventArgs e)
+        private void ComputePercentageTask()
         {
-            
-            updateConnectionInterface += updateConnectionGuiElement;
-            Application.Current.Dispatcher.Invoke(updateConnectionInterface, netObj.remoteIsConnected);
-            updateConnectionInterface -= updateConnectionGuiElement;
+            TimeSpan timeSinceStart = TimeSpan.Zero;
+            TimeSpan oldTimeSinceStart = TimeSpan.Zero;
+            TimeSpan deltaTime = TimeSpan.Zero;
 
-            
+
+            stopWatch.Start();
+            while (!terminateWatchThread)
+            {
+                lock (this)
+                {
+                    timeSinceStart = stopWatch.Elapsed;
+                    deltaTime = timeSinceStart - oldTimeSinceStart;
+                    if (FocusedProcess != null)
+                        FocusedProcess.TotalFocusTime += deltaTime;//elapsed - FocusedProcess.FocusTimeStamp;
+
+                    foreach (ProcessInfo p in Processes)
+                    {
+                        try
+                        {
+                            p.FocusPercentage = Math.Round((p.TotalFocusTime.TotalMilliseconds / timeSinceStart.TotalMilliseconds) * 100, 2);
+                        }
+                        catch (DivideByZeroException ex)
+                        {
+                            p.FocusPercentage = 0;
+                        }
+                    }
+
+                    oldTimeSinceStart = timeSinceStart;
+                    //Lanciamo la cosa col dispatcher
+                    //Application.Current.Dispatcher.Invoke(updatePercentages);
+                    Thread.Sleep(1000);
+                }
+            }
+            stopWatch.Stop();
         }
 
-        private void updateConnectionGuiElement(bool connectionState)
+        private void UpdateConnectionGuiElement(bool connectionState)
         {
+            Processes.Clear();
+
             if (connectionState)
             {
                 ButtonText = "Disconnect";
@@ -601,30 +662,19 @@ namespace ClientPDS
                 ButtonText = "Connect";
                 IpTextEnabled = true;
                 ShortcutToggleEnabled = false;
-                //Clear the processes list
-                Processes.Clear();
+                
             }
         }
 
         public void closeApplication()
         {
-            CloseConnection();
+            RequestCloseConnection();
         }
 
-        public void CloseConnection()
-        {
-            this.connectionClosedbyUser = true;
-            this.keepConnection = false;
-            if (netObj != null && netObj.remoteIsConnected)
-            {
-                netObj.SendVarData("-1|exit");
-                netObj.CloseConnection();
-            }
-            //Clear the processes list
-            Processes.Clear();
-            firstTimeFocused = true;
-            terminateWatchThread = true;
-        }
+
+
+        
+        
 
     }
 }

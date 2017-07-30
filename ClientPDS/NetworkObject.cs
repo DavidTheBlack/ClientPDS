@@ -13,6 +13,11 @@ namespace Network
     {
 
         #region fields and properties
+        public const string closeRequest = "7|exit";
+        public const string connLost = "-1|lost";
+
+
+
 
         //Remote Socket
         private Socket _remote;
@@ -198,6 +203,8 @@ namespace Network
 
         /// <summary>
         /// Sync receive method
+        /// Return true if the connection is active or the connection is lost (save connection lost message in message queue)
+        /// Return false only if the connection is already closed
         /// </summary>
         public bool ReceiveData()
         {
@@ -221,7 +228,7 @@ namespace Network
                         recv = _remote.Receive(data, total, dataleft, 0);
                         if (recv == 0)
                         {
-                            data = UnicodeEncoding.Unicode.GetBytes("exit");
+                            data = UnicodeEncoding.Unicode.GetBytes(NetworkObject.connLost);
                             break;
                         }
                         total += recv;
@@ -231,7 +238,7 @@ namespace Network
                 catch (Exception ex)
                 {
                     _log = "Receive error: " + ex.Message;
-                    return false;
+                    data = UnicodeEncoding.Unicode.GetBytes(NetworkObject.connLost);
                 }
 
                 msgQueue.push(data);
