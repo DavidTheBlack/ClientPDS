@@ -35,6 +35,15 @@ namespace ClientPDS.Views
         ProcessesViewModel processesViewModelObj;
 
 
+        bool altKeyisPressed = false;
+        bool ctrlKeyisPressed = false;
+        bool shiftKeyisPressed = false;
+
+
+
+
+
+
         public ShortcutWindow(ProcessesViewModel procVM)
         {
             processesViewModelObj = procVM;
@@ -43,77 +52,75 @@ namespace ClientPDS.Views
 
 
        
-/*
-        private void TextBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            //Controllo se il tasto è un modificatore
-            //se lo è esco e non faccio nulla
 
-            //se no nè un modificatore 
-            //prelevo il tasto
-            //controllo i modificatori premuti
-            //invio il dato al server
+        //private void TextBox_KeyDown(object sender, KeyEventArgs e)
+        //{
+        //    //Controllo se il tasto è un modificatore
+        //    //se lo è esco e non faccio nulla
 
-            switch (e.Key)
-            {
-                case Key.LeftAlt:
-                case Key.RightAlt:
-                case Key.System:
-                case Key.LeftCtrl:
-                case Key.RightCtrl:
-                case Key.LeftShift:
-                case Key.RightShift:
-                    {
-                        e.Handled = true;
-                        break;
-                    }
-            }
+        //    //se no nè un modificatore 
+        //    //prelevo il tasto
+        //    //controllo i modificatori premuti
+        //    //invio il dato al server
 
-            if (!e.Handled)
-            {
-                Keyboard.Modifiers.GetHashCode();
+        //    switch (e.Key)
+        //    {
+        //        case Key.LeftAlt:
+        //        case Key.RightAlt:
+        //        case Key.System:
+        //        case Key.LeftCtrl:
+        //        case Key.RightCtrl:
+        //        case Key.LeftShift:
+        //        case Key.RightShift:
+        //            {
+        //                e.Handled = true;
+        //                break;
+        //            }
+        //    }
 
-            }
+        //    if (!e.Handled)
+        //    {
+        //        Keyboard.Modifiers.GetHashCode();
 
-
-                    _pressedKeys.Add(e.Key);
-            KeyboardDevice kd = e.KeyboardDevice;
-            _pressedModifiers.Add(kd.Modifiers);
-
-        }
-
-        private void TextBox_KeyUp(object sender, KeyEventArgs e)
-        {
-
-            shortcutSeq = string.Empty;
-            modSeq = string.Empty;
-            foreach (Key k in _pressedKeys)
-            {
-                shortcutSeq += k.GetHashCode() + " + ";
-            }
-
-            foreach (ModifierKeys kdT in _pressedModifiers)
-            {
-                modSeq += kdT.GetHashCode() + " + ";
-            }
+        //    }
 
 
+        //    _pressedKeys.Add(e.Key);
+        //    KeyboardDevice kd = e.KeyboardDevice;
+        //    _pressedModifiers.Add(kd.Modifiers);
 
+        //}
 
-            shortcutSeq += " modificatori: " + modSeq;
+        //private void TextBox_KeyUp(object sender, KeyEventArgs e)
+        //{
 
-            //showShortcutLbl.Content = shortcutSeq;
+        //    shortcutSeq = string.Empty;
+        //    modSeq = string.Empty;
+        //    foreach (Key k in _pressedKeys)
+        //    {
+        //        shortcutSeq += k.GetHashCode() + " + ";
+        //    }
+
+        //    foreach (ModifierKeys kdT in _pressedModifiers)
+        //    {
+        //        modSeq += kdT.GetHashCode() + " + ";
+        //    }
 
 
 
-            //lblShowShortcut.Content = _pressedKeys.ToString();
 
-        }
+        //    shortcutSeq += " modificatori: " + modSeq;
+
+        //    //showShortcutLbl.Content = shortcutSeq;
+
+
+
+        //    //lblShowShortcut.Content = _pressedKeys.ToString();
+
+        //}
 
         protected override void OnPreviewKeyDown(KeyEventArgs e)
         {
-
-
 
 
             string commandStr = string.Empty;
@@ -125,28 +132,69 @@ namespace ClientPDS.Views
             //prelevo il tasto
             //controllo i modificatori premuti
             //invio il dato al server
+            Key key = (e.Key == Key.System ? e.SystemKey : e.Key);
 
-            switch (e.Key)
+
+            switch (key)
             {
-                case Key.LeftAlt:
-                case Key.RightAlt:
-                case Key.System:
-                case Key.LeftCtrl:
-                case Key.RightCtrl:
+            //    case Key.LeftAlt:
+            //    case Key.RightAlt:
+            //    case Key.System:
+            //        {
+            //            if (!altKeyisPressed)
+            //            {
+            //                altKeyisPressed = true;
+            //                altSwitch.IsChecked = true;
+            //            }else
+            //            {
+            //                e.Handled=true;
+            //            }
+            //            break;
+            //        }
+            //    case Key.LeftCtrl:
+            //    case Key.RightCtrl:
+            //        {
+            //            if (!ctrlKeyisPressed)
+            //            {
+            //                ctrlKeyisPressed = true;
+            //                ctrlSwitch.IsChecked = true;
+            //            }
+            //            else
+            //                e.Handled = true;
+            //            break;
+            //        }
+
                 case Key.LeftShift:
                 case Key.RightShift:
                     {
+                        shiftSwitch.IsChecked = true;
                         e.Handled = true;
                         break;
                     }
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                //case Key.System:
+                    {
+                        altSwitch.IsChecked = true;
+                        e.Handled = true;
+                        break;
+                    }
+                case Key.LeftCtrl:
+                case Key.RightCtrl:
+                {
+                    ctrlSwitch.IsChecked = true;
+                    e.Handled = true;
+                    break;
+                }
+                default:
+                    break;                
             }
 
             if (!e.Handled)
             {
-                string modifiers = Keyboard.Modifiers.GetHashCode().ToString();
-                commandStr = "dw/" + modifiers + "/"+KeyInterop.VirtualKeyFromKey(e.Key);
+                commandStr = "dw/"+Keyboard.Modifiers.GetHashCode() +"/" + KeyInterop.VirtualKeyFromKey(key);
+                processesViewModelObj.SendKeyboardCom(commandStr);
             }
-            processesViewModelObj.SendKeyboardCom(commandStr);
             e.Handled = true;
         }
 
@@ -155,12 +203,95 @@ namespace ClientPDS.Views
 
             string commandStr = string.Empty;
             string modifiers = Keyboard.Modifiers.GetHashCode().ToString();
-            commandStr = "dw/" + modifiers + "/" + KeyInterop.VirtualKeyFromKey(e.Key);
+            Key key = (e.Key == Key.System ? e.SystemKey : e.Key);
+            
+            switch (key)
+            {
 
-            processesViewModelObj.SendKeyboardCom(commandStr);
+                //    case Key.RightAlt:     //Fix the ALT-gr behaviour of set also the right ctrl
+                //        {                   
+                //            altKeyisPressed = false;
+                //            altSwitch.IsChecked = false;
+                //            ctrlSwitch.IsChecked = false;
+                //            ctrlKeyisPressed = false;
+                //            commandStr = "up/" + KeyInterop.VirtualKeyFromKey(Key.RightCtrl);
+                //            processesViewModelObj.SendKeyboardCom(commandStr);
+
+                //            break;
+                //        }
+                //    case Key.LeftAlt:
+                //    case Key.System:
+                //        {
+                //            if (altKeyisPressed)
+                //            {
+                //                altKeyisPressed = false;
+                //                altSwitch.IsChecked = false;
+
+                //            }
+                //            break;
+                //        }
+                //    case Key.LeftCtrl:
+                //    case Key.RightCtrl:
+                //        {
+                //            if (ctrlKeyisPressed)
+                //            {
+                //                ctrlKeyisPressed = false;
+                //                ctrlSwitch.IsChecked = false;
+                //            }
+                //                break;
+                //        }
+
+                //    case Key.LeftShift:
+                //    case Key.RightShift:
+                //        {
+                //            if (shiftKeyisPressed)
+                //            {
+                //                shiftKeyisPressed = false;
+                //                shiftSwitch.IsChecked = false;
+                //            }
+                //                break;
+                //        }
+                //}
+
+                //commandStr = "up/" + KeyInterop.VirtualKeyFromKey(key);
+
+                //processesViewModelObj.SendKeyboardCom(commandStr);
+
+                case Key.LeftShift:
+                case Key.RightShift:
+                    {
+                        shiftSwitch.IsChecked = false;
+                        e.Handled = true;
+                        break;
+                    }
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                //case Key.System:
+                    {
+                        altSwitch.IsChecked = false;
+                        e.Handled = true;
+                        break;
+                    }
+                case Key.LeftCtrl:
+                case Key.RightCtrl:
+                    {
+                        ctrlSwitch.IsChecked = false;
+                        e.Handled = true;
+                        break;
+                    }
+                default:
+                    break;
+            }
+
+            if (!e.Handled)
+            {
+                commandStr = "up/" + Keyboard.Modifiers.GetHashCode() + "/" + KeyInterop.VirtualKeyFromKey(key);
+                processesViewModelObj.SendKeyboardCom(commandStr);
+            }
+           
             e.Handled = true;
         }
-        */
+        
 
 
 

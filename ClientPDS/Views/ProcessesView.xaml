@@ -11,12 +11,12 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition /> <!-- Data grid row-->
-            <RowDefinition Height="25"/> <!-- Notification bar row-->
+            <RowDefinition Height="30" /> <!-- Notification bar row-->
         </Grid.RowDefinitions>
 
         <DataGrid Name ="Apps" ItemsSource="{Binding Path=Processes }" Grid.Row="0" AutoGenerateColumns="False"
                    SelectedItem="{Binding Path=FocusedProcess}" SelectionMode="Extended" SelectionUnit="FullRow"  
-                  IsReadOnly="True" Margin="0,0,0,15"
+                  IsReadOnly="True" Margin="0,0,0,30"
                     >
 
             <DataGrid.Resources>
@@ -66,10 +66,40 @@
 
         <Grid Grid.Row="1">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                <Label Name="ShortcutLabel"  Content="Send shortcut to focused process:" />
-                <Button x:Name="ShortcutBtn" Content="Shortcut" IsEnabled="{Binding Path=ShortcutBtnEnabled}"  Click="ShortcutBtn_Click"  MinHeight="30" Width="80" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                
+                <!--<Label Name="ShortcutLabel"  Content="Send shortcut to focused process:" />-->
+                <!--<Button x:Name="ShortcutBtn" Content="Shortcut" IsEnabled="{Binding Path=ShortcutBtnEnabled}"  Click="ShortcutBtn_Click"  MinHeight="30" Width="80" HorizontalAlignment="Right" VerticalAlignment="Center" />-->
+
+
+                <StackPanel Orientation="Horizontal"   HorizontalAlignment="Center" >
+                    <!--<Controls:HotKeyBox Name="HotKeyBox" Watermark="Enter hotkey" IsEnabled="True"/>
+                    <TextBox Name="HotKeyTxt" Controls:TextBoxHelper.Watermark="Enter hotkey" MinWidth="30"/>-->
+
+                    <Controls:ToggleSwitch Name="EnableHotkeySwitch" Style="{StaticResource MahApps.Metro.Styles.ToggleSwitch.Win10}"
+                                   OffSwitchBrush="WhiteSmoke" IsEnabled="{Binding Path=ShortcutToggleEnabled}"
+                                   Content="Enable Hot Key" FontSize="12" Margin="0,0,10,0"/>
+
+                    <Controls:ToggleSwitch Name="altSwitch" Style="{StaticResource MahApps.Metro.Styles.ToggleSwitch.Win10}"
+                                   OffSwitchBrush="WhiteSmoke"
+                                   Content="ALT" FontSize="12" IsHitTestVisible="False" Margin="2,0,2,0"/>
+                    <Controls:ToggleSwitch Name="ctrlSwitch" Style="{StaticResource MahApps.Metro.Styles.ToggleSwitch.Win10}"
+                                   OffSwitchBrush="WhiteSmoke"
+                                   Content="CTRL" FontSize="12" IsHitTestVisible="False" Margin="2,0,2,0"/>
+                    <Controls:ToggleSwitch Name="shiftSwitch" Style="{StaticResource MahApps.Metro.Styles.ToggleSwitch.Win10}"
+                                   OffSwitchBrush="WhiteSmoke"                                   
+                                   Content="SHIFT" FontSize="12" IsHitTestVisible="False" Margin="2,0,2,0"/>
+                </StackPanel>
+
+
+
+
+
+
+
+
+
             </StackPanel>
+            
+            
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
                 <Label x:Name="ServerIpLbl" Content="Insert server IP: " HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
                 <TextBox x:Name="ServerIpTxt" MaxLength="15" TextWrapping="Wrap"  Width="100" Text="{Binding Path=ServerIP}" IsEnabled="{Binding Path=IpTextEnabled}"  HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="0,0,10,0" />

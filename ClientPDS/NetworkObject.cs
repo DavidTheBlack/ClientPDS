@@ -271,7 +271,6 @@ namespace Network
                 dataleft -= sent;
             }
             return total;
-
         }
 
        

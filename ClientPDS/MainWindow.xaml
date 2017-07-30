@@ -7,7 +7,10 @@
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:ClientPDS"
         mc:Ignorable="d"
-        Width="1024" Height="540" 
+        Width="Auto" Height="Auto"
+        MinWidth="1024" MinHeight=" 540"
+        SizeToContent="WidthAndHeight"
+                      
         WindowStartupLocation="CenterScreen"
         Style="{DynamicResource VSWindowStyleKey}"
         ResizeMode="CanResizeWithGrip"

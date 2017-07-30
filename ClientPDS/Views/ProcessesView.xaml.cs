@@ -22,20 +22,31 @@ namespace ClientPDS
     public partial class ProcessesView : UserControl
     {
         private ProcessesViewModel _viewModel;
-        //public ProcessesViewModel ViewModel
-        //{
-        //    set {
-        //        _viewModel = value;                
-        //    }
-        //    private get { return _viewModel; }
-        //}
+       
 
         public ProcessesView()
         {
             InitializeComponent();
             _viewModel = new ProcessesViewModel();
             this.DataContext = _viewModel;
+            EnableHotkeySwitch.IsCheckedChanged += EnableHotkeySwitch_IsCheckedChanged;
             
+        }
+
+        private void EnableHotkeySwitch_IsCheckedChanged(object sender, EventArgs e)
+        {
+            if (EnableHotkeySwitch.IsChecked==true)
+            {
+                //registro agli eventi
+                this.PreviewKeyDown += HandleOnPreviewKeyDown;
+                this.PreviewKeyUp += HandleOnPreviewKeyUp;
+            }
+            else
+            {
+                //deregistro dagli eventi
+                this.PreviewKeyDown -= HandleOnPreviewKeyDown;
+                this.PreviewKeyUp -= HandleOnPreviewKeyUp;
+            }
         }
 
         private void ConnectionBtn_Click(object sender, RoutedEventArgs e)
@@ -86,6 +97,102 @@ namespace ClientPDS
             sw.DataContext = _viewModel;
             sw.Show();
         }
+
+        public void HandleOnPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            string commandStr = string.Empty;
+
+            //Controllo se il tasto è un modificatore
+            //se lo è esco e non faccio nulla
+
+            //se no nè un modificatore 
+            //prelevo il tasto
+            //controllo i modificatori premuti
+            //invio il dato al server
+            Key key = (e.Key == Key.System ? e.SystemKey : e.Key);
+
+
+            switch (key)
+            {
+                case Key.LeftShift:
+                case Key.RightShift:
+                    {
+                        shiftSwitch.IsChecked = true;
+                        e.Handled = true;
+                        break;
+                    }
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                    //case Key.System:
+                    {
+                        altSwitch.IsChecked = true;
+                        e.Handled = true;
+                        break;
+                    }
+                case Key.LeftCtrl:
+                case Key.RightCtrl:
+                    {
+                        ctrlSwitch.IsChecked = true;
+                        e.Handled = true;
+                        break;
+                    }
+                default:
+                    break;
+            }
+
+            if (!e.Handled)
+            {
+                commandStr = "dw/" + Keyboard.Modifiers.GetHashCode() + "/" + KeyInterop.VirtualKeyFromKey(key);
+                _viewModel.SendKeyboardCom(commandStr);
+            }
+            e.Handled = true;
+        }
+
+        public void HandleOnPreviewKeyUp(object sender, KeyEventArgs e)
+        {
+            string commandStr = string.Empty;
+            string modifiers = Keyboard.Modifiers.GetHashCode().ToString();
+            Key key = (e.Key == Key.System ? e.SystemKey : e.Key);
+
+            switch (key)
+            {
+
+                case Key.LeftShift:
+                case Key.RightShift:
+                    {
+                        shiftSwitch.IsChecked = false;
+                        e.Handled = true;
+                        break;
+                    }
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                    //case Key.System:
+                    {
+                        altSwitch.IsChecked = false;
+                        e.Handled = true;
+                        break;
+                    }
+                case Key.LeftCtrl:
+                case Key.RightCtrl:
+                    {
+                        ctrlSwitch.IsChecked = false;
+                        e.Handled = true;
+                        break;
+                    }
+                default:
+                    break;
+            }
+
+            if (!e.Handled)
+            {
+                commandStr = "up/" + Keyboard.Modifiers.GetHashCode() + "/" + KeyInterop.VirtualKeyFromKey(key);
+                _viewModel.SendKeyboardCom(commandStr);
+            }
+
+            e.Handled = true;
+        }
+
+
     }
     
     

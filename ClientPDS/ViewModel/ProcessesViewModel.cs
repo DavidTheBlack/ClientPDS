@@ -69,16 +69,16 @@ namespace ClientPDS
 
         #region interfaceVariables
 
-        private bool _shortcutBtnEnabled;
-        public bool ShortcutBtnEnabled
+        private bool _shortcutToggleEnabled;
+        public bool ShortcutToggleEnabled
         {
-            get { return _shortcutBtnEnabled; }
+            get { return _shortcutToggleEnabled; }
             set
             {
-                if (_shortcutBtnEnabled != value)
+                if (_shortcutToggleEnabled != value)
                 {
-                    _shortcutBtnEnabled = value;
-                    RaisePropertyChanged("ShortcutBtnEnabled");
+                    _shortcutToggleEnabled = value;
+                    RaisePropertyChanged("ShortcutToggleEnabled");
                 }
 
             }
@@ -228,7 +228,7 @@ namespace ClientPDS
             ServerIP = "127.0.0.1";
             ButtonText = "Connect";
             IpTextEnabled = true;
-            ShortcutBtnEnabled = false;
+            ShortcutToggleEnabled = false;
             keepConnection = true;
             connectionClosedbyUser = false;
 
@@ -593,14 +593,14 @@ namespace ClientPDS
             {
                 ButtonText = "Disconnect";
                 IpTextEnabled = false;
-                ShortcutBtnEnabled = true;
+                ShortcutToggleEnabled = true;
 
             }
             else //Server is disconnected
             {
                 ButtonText = "Connect";
                 IpTextEnabled = true;
-                ShortcutBtnEnabled = false;
+                ShortcutToggleEnabled = false;
                 //Clear the processes list
                 Processes.Clear();
             }

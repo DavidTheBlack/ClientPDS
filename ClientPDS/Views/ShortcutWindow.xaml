@@ -42,7 +42,6 @@
                 <Controls:ToggleSwitch Name="shiftSwitch" Style="{StaticResource MahApps.Metro.Styles.ToggleSwitch.Win10}"
                                    OffSwitchBrush="WhiteSmoke"                                   
                                    Content="SHIFT"/>
-
             </StackPanel>
         </StackPanel>
 
