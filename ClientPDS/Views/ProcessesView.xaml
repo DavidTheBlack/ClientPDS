@@ -60,7 +60,8 @@
 
                 <DataGridTextColumn Header="Path" Binding="{Binding Path=Path}" />
 
-                <DataGridTextColumn Header="Percentage" Binding="{Binding Path=FocusPercentage, UpdateSourceTrigger=PropertyChanged}" />
+                <DataGridTextColumn Header="Percentage" Binding="{Binding Path=FocusPercentage, StringFormat=\{\0\}%}" />
+                <!--, UpdateSourceTrigger=PropertyChanged}-->
             </DataGrid.Columns>
         </DataGrid>
 
