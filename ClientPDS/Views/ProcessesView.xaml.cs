@@ -102,6 +102,7 @@ namespace ClientPDS
 
         private void StartConnection()
         {
+           
             if (!_viewModel.StartNetworkTask())            
                 MessageBox.Show("Non è stato possibile stabilire la connessione con il server.\n" + _viewModel.Log);      
         }

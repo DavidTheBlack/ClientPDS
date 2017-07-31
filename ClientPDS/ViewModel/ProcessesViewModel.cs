@@ -197,6 +197,22 @@ namespace ClientPDS
         private bool connectionClosedbyUser;
         public bool ApplicationIsClosing;
 
+        private bool _progressRing;
+        public bool ProgressRing { 
+            get
+            {
+                return _progressRing;
+            }
+
+            set
+            {
+                if (_progressRing != value)
+                {
+                    _progressRing = value;
+                    RaisePropertyChanged("ProgressRing");
+                }
+            }
+        }
 
         //Default Icon Bytes
         private byte[] defaultIcon;
@@ -237,6 +253,7 @@ namespace ClientPDS
             ShortcutToggleEnabled = false;
             connectionClosedbyUser = false;
             ApplicationIsClosing = false;
+            ProgressRing = false;
 
             firstTimeFocused = true;            //Used to initialize the starting point of the watchdog timer
             terminateWatchThread = false;       //Used to terminate the watchdog thread
@@ -396,9 +413,9 @@ namespace ClientPDS
             //Save the server ip in the current object
             try
             {
+                ProgressRing = true;
                 netObj = new NetworkObject(ServerIP, 4444);
                 recThread = new Thread(threadNetworkDelegate);
-
                 recThread.Start();
             }
             catch(Exception ex)
@@ -443,6 +460,7 @@ namespace ClientPDS
             else
             {
                 MessageBox.Show("Server is not reachable.\n" + netObj.log);
+                ProgressRing = false;
             }
 
             netObj.messageReceived -= HandleReceivedMex;
@@ -474,6 +492,7 @@ namespace ClientPDS
                 Application.Current.Dispatcher.Invoke(updateConnectionInterface, netObj.remoteIsConnected);
                 updateConnectionInterface -= UpdateConnectionGuiElement;
                 connectionClosedbyUser = false;
+                ProgressRing = false;
             }
            
         }
