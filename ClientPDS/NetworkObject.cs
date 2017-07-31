@@ -147,6 +147,7 @@ namespace Network
                     IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(_remoteIP), _remotePort);
                     ////Create TCP/IP socket                    
                     _remote = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    
                     //start tcp connection
                     _remote.Connect(remoteEP);
                     //Notify the successfull connection

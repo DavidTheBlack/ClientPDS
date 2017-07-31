@@ -135,12 +135,16 @@ namespace ClientPDS
 
             set
             {
-                if (_serverIP != value)
+                if (!CheckIPValid(value))
+                {
+                    MessageBox.Show("Invalid IP Address!");
+                    return;
+                }
+                    if (_serverIP != value)
                 {
                     _serverIP = value;
                     RaisePropertyChanged("ServerIP");
                 }
-
             }
         }
 
@@ -191,6 +195,7 @@ namespace ClientPDS
         /// flag that signals the user has stopped the connection
         /// </summary>
         private bool connectionClosedbyUser;
+        public bool ApplicationIsClosing;
 
 
         //Default Icon Bytes
@@ -231,6 +236,7 @@ namespace ClientPDS
             IpTextEnabled = true;
             ShortcutToggleEnabled = false;
             connectionClosedbyUser = false;
+            ApplicationIsClosing = false;
 
             firstTimeFocused = true;            //Used to initialize the starting point of the watchdog timer
             terminateWatchThread = false;       //Used to terminate the watchdog thread
@@ -462,10 +468,14 @@ namespace ClientPDS
         private void HandleConnectionStateChange(object source, EventArgs e)
         {
 
-            connectionClosedbyUser = false;
-            updateConnectionInterface += UpdateConnectionGuiElement;
-            Application.Current.Dispatcher.Invoke(updateConnectionInterface, netObj.remoteIsConnected);
-            updateConnectionInterface -= UpdateConnectionGuiElement;
+            if( !ApplicationIsClosing )
+            {
+                updateConnectionInterface += UpdateConnectionGuiElement;
+                Application.Current.Dispatcher.Invoke(updateConnectionInterface, netObj.remoteIsConnected);
+                updateConnectionInterface -= UpdateConnectionGuiElement;
+                connectionClosedbyUser = false;
+            }
+           
         }
 
         /// <summary>
@@ -595,7 +605,7 @@ namespace ClientPDS
         /// <param name="keyComStr">string of keyboard command</param>
         public void SendKeyboardCom(string keyComStr)
         {
-            if (netObj.remoteIsConnected)
+            if (netObj.remoteIsConnected && FocusedProcess != null)
             {
                 string focusPidStr = FocusedProcess.Pid.ToString();
                 string message = focusPidStr + "|" + keyComStr;
@@ -640,7 +650,7 @@ namespace ClientPDS
                     oldTimeSinceStart = timeSinceStart;
                     //Lanciamo la cosa col dispatcher
                     //Application.Current.Dispatcher.Invoke(updatePercentages);
-                    Thread.Sleep(1000);
+                    Thread.Sleep(500);
                 }
             }
             stopWatch.Stop();
@@ -668,13 +678,55 @@ namespace ClientPDS
 
         public void closeApplication()
         {
+            ApplicationIsClosing = true;
             RequestCloseConnection();
+        }
+     
+        /// <summary>
+        /// Check IP Address, will accept 0.0.0.0 as a valid IP
+        /// </summary>
+        /// <param name="strIP">0.0.0.0 style IP address</param>
+        /// <returns>bool</returns>
+        public bool CheckIPValid(string strIP)
+        {
+            // Split string by ".", check that array length is 3
+            char chrFullStop = '.';
+            string[] arrOctets = strIP.Split(chrFullStop);
+            if (arrOctets.Length != 4)
+            {
+                return false;
+            }
+            // Check each substring checking that the int value is less than 255 
+            // and that is char[] length is !>     2
+            Int16 MAXVALUE = 255;
+            Int32 temp; // Parse returns Int32
+            foreach (String strOctet in arrOctets)
+            {
+                if (strOctet.Length > 3)
+                {
+                    return false;
+                }
+                
+               if(int.TryParse(strOctet,out temp))
+                {
+                    if (temp > MAXVALUE)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+               
+            }
+            return true;
         }
 
 
 
-        
-        
+
+
 
     }
 }

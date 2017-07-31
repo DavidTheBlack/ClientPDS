@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using ClientPDS.Views;
+
 
 namespace ClientPDS
 {
@@ -33,31 +33,33 @@ namespace ClientPDS
             
         }
 
-        private void EnableHotkeySwitch_IsCheckedChanged(object sender, EventArgs e)
+        public void EnableHotkeySwitch_IsCheckedChanged(object sender, EventArgs e)
         {
             if (EnableHotkeySwitch.IsChecked==true)
             {
                 //registro agli eventi
                 this.PreviewKeyDown += HandleOnPreviewKeyDown;
                 this.PreviewKeyUp += HandleOnPreviewKeyUp;
+                ResetHotKeyToggles();
             }
             else
             {
                 //deregistro dagli eventi
                 this.PreviewKeyDown -= HandleOnPreviewKeyDown;
                 this.PreviewKeyUp -= HandleOnPreviewKeyUp;
+                ResetHotKeyToggles();
             }
         }
 
         /// <summary>
         /// Reset all the toggles
         /// </summary>
-        private void ResetHotKeyToggles()
+        public void ResetHotKeyToggles()
         {
             altSwitch.IsChecked = false;
             ctrlSwitch.IsChecked = false;
             shiftSwitch.IsChecked = false;
-            EnableHotkeySwitch.IsChecked = false;
+            //EnableHotkeySwitch.IsChecked = false;
 
         }
 
@@ -70,6 +72,7 @@ namespace ClientPDS
             else
             {
                 EnableHotkeySwitch.IsChecked = false;
+                ResetHotKeyToggles();
                 StopConnection();
             }
         }
@@ -79,7 +82,7 @@ namespace ClientPDS
         /// </summary>
         public void ConnectionStateChangeHandler(object source, EventArgs e)
         {
-            ResetHotKeyToggles();
+            //ResetHotKeyToggles();
 
             if (_viewModel.connectedToServer)//server is connected
             {                

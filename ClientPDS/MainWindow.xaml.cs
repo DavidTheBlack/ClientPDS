@@ -35,8 +35,8 @@ namespace ClientPDS
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            processesViewModelObj.closeApplication();            
-            //Application.Current.Shutdown();                       
+            processesViewModelObj.closeApplication();
+            //Application.Current.Shutdown();
         }
 
 
