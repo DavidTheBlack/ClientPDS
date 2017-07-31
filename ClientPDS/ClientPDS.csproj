@@ -89,7 +89,6 @@
     <Compile Include="ViewModel\ProcessesViewModel.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="NetworkObject.cs" />
-    <Compile Include="NetworkStateObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

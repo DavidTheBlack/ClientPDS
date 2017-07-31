@@ -3,7 +3,6 @@ using System.Text;
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
-using NetworkStateObject;
 using System.Windows;
 using ClientPDS.HelperClass;
 
@@ -15,9 +14,6 @@ namespace Network
         #region fields and properties
         public const string closeRequest = "7|exit";
         public const string connLost = "-1|lost";
-
-
-
 
         //Remote Socket
         private Socket _remote;
@@ -187,8 +183,7 @@ namespace Network
                     this._remote = null;
                     this.OnConnectionStateChanged();
                 }
-            }
-            
+            }     
         }
 
         /// <summary>
@@ -198,8 +193,7 @@ namespace Network
         /// <returns>return true if the pop of the message goes well</returns>
         public bool GetMessage(out byte[] receivedBytes)
         {
-            return msgQueue.pop(out receivedBytes);
-            
+            return msgQueue.pop(out receivedBytes);          
         }
 
         /// <summary>

@@ -53,11 +53,6 @@ namespace ClientPDS
         delegate void updateConnectionInterfaceDelegate(bool connectionState);
         updateConnectionInterfaceDelegate updateConnectionInterface;
 
-
-
-
-
-
         #endregion
 
         #region constants
@@ -103,7 +98,6 @@ namespace ClientPDS
                     _focusedProcess = value;
                     RaisePropertyChanged("FocusedProcess");
                 }
-
             }
         }
 
@@ -286,12 +280,6 @@ namespace ClientPDS
             else
                 return false;
 
-            ////Converting the state from string to int
-            //if (System.Int32.TryParse(p.state, out tmpInt))
-            //    tmp.state = tmpInt;
-            //else
-            //    return false;
-
             tmp.Title = p.title;
             tmp.Path = p.path;
 
@@ -426,10 +414,6 @@ namespace ClientPDS
             
 
             return true;
-            //Codice obsoleto
-            //recThread.IsBackground = true;  //Setto il thread in background
-            //return true;        
-            //return netObj.remoteIsConnected ? true : false;           
         }
        
         /// <summary>
@@ -524,7 +508,6 @@ namespace ClientPDS
                             }                                                      
                     }
 
-
                     MemoryStream ms = new MemoryStream(recBuf);
                     try
                     {
@@ -533,12 +516,6 @@ namespace ClientPDS
                     catch (Exception ex)
                     {
                         MessageBox.Show("Errore di deserializzazione: " + ex.Message);
-                        //Test if the received mex is a protocol message (Closing connection for example) //NOn è più raggiungibile
-                        //if (System.Text.UnicodeEncoding.Unicode.GetString(recBuf) == "conn_term")
-                        //{
-                        //    //exit the method
-                        //    break;
-                        //}
                     }
 
                     foreach (ProcessInfoJsonStr p in processesList)
@@ -573,12 +550,6 @@ namespace ClientPDS
                     break;
                 }
             }
-            
-
-            //Console.WriteLine("Messaggio ricevuto: "+net.receivedMex);
-            //(System.Text.UnicodeEncoding.Unicode.GetBytes(net.receivedMex));
-            //File.WriteAllText("c:\\users\\david\\desktop\\json.txt", net.receivedMex);            
-            //Console.WriteLine("Dati Processo- Pid: " + processes[0].pid + " stato: " + processes[0].state);
         }       
 
         /// <summary>
@@ -587,8 +558,6 @@ namespace ClientPDS
         /// <param name="disconnectMex">message received from the network object</param>
         public void HandleDisconnectionMex(string disconnectionMex)
         {
-            
-
             terminateWatchThread = true;    //Stop the percentage calculation in the stopWatchThread
             firstTimeFocused = true;        //Used to start the StopWatchThreadat the next connection
 
@@ -607,15 +576,6 @@ namespace ClientPDS
 
             netObj.CloseConnection();       //Close the socket and dispose the network resources
 
-            // //Clear the processes list
-            //// try {
-            //         clearProcesses += clearProcessesList;
-            //         Application.Current.Dispatcher.Invoke(clearProcesses);
-            //         clearProcesses -= clearProcessesList;
-            // //}catch(System.NullReferenceException ex)
-
-
-
         }
 
         /// <summary>
@@ -629,8 +589,7 @@ namespace ClientPDS
                 string focusPidStr = FocusedProcess.Pid.ToString();
                 string message = focusPidStr + "|" + keyComStr;
                 netObj.SendVarData(message);
-            }
-            
+            } 
         }
 
         /// <summary>
@@ -642,7 +601,6 @@ namespace ClientPDS
             TimeSpan timeSinceStart = TimeSpan.Zero;
             TimeSpan oldTimeSinceStart = TimeSpan.Zero;
             TimeSpan deltaTime = TimeSpan.Zero;
-
 
             stopWatch.Start();
             while (!terminateWatchThread)
@@ -667,8 +625,6 @@ namespace ClientPDS
                     }
 
                     oldTimeSinceStart = timeSinceStart;
-                    //Lanciamo la cosa col dispatcher
-                    //Application.Current.Dispatcher.Invoke(updatePercentages);
                     Thread.Sleep(500);
                 }
             }
@@ -741,11 +697,5 @@ namespace ClientPDS
             }
             return true;
         }
-
-
-
-
-
-
     }
 }

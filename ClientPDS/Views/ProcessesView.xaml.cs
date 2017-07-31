@@ -59,8 +59,6 @@ namespace ClientPDS
             altSwitch.IsChecked = false;
             ctrlSwitch.IsChecked = false;
             shiftSwitch.IsChecked = false;
-            //EnableHotkeySwitch.IsChecked = false;
-
         }
 
         private void ConnectionBtn_Click(object sender, RoutedEventArgs e)
@@ -82,7 +80,6 @@ namespace ClientPDS
         /// </summary>
         public void ConnectionStateChangeHandler(object source, EventArgs e)
         {
-            //ResetHotKeyToggles();
 
             if (_viewModel.connectedToServer)//server is connected
             {                
@@ -95,9 +92,7 @@ namespace ClientPDS
                 ConnectionBtn.Content = "Connect";
                 ServerIpTxt.IsEnabled = true;
                 EnableHotkeySwitch.IsEnabled = false;
-
             }
-
         }        
 
         private void StartConnection()
@@ -206,22 +201,6 @@ namespace ClientPDS
             e.Handled = true;
         }
 
-
-
-
-
-
-
-
-        //private void ShortcutBtn_Click(object sender, RoutedEventArgs e)
-        //{
-        //    ShortcutWindow sw = new ShortcutWindow(_viewModel);
-        //    sw.DataContext = _viewModel;
-        //    sw.Show();
-        //}
     }
-
-
-
 
 }
